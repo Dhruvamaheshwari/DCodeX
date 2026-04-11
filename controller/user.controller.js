@@ -48,7 +48,49 @@ const register = async(res , req) => {
     }
 }
 
-// login
+// login 
+const login = async(res ,req) => {
+    try {
+        
+        // login via a email and pass
+        const {emailId , password} = req.body
+
+        // check all field are valid or not
+        if(!emailId || !password)
+        {
+            return res.status(401).json({succ:true , mess:"Invalid Credentials"})
+        }
+
+        // to check that email and password are present in the database or not
+        const userPresent = await User.findOne({emailId});
+        
+        if(!userPresent)
+        {
+            return res.status(401).json({succ:false , mess:"Please login first"})
+        }
+
+        // check password correct or not 
+        const passwordIsMatch = bcrypt.compare(password , userPresent.password)
+
+        if(!passwordIsMatch)
+        {
+            return res.status(401).json({succ:false , mess:"Invalid Credentials"})
+        }
+
+        // jwt token ko create kr ke return krva sakte h
+
+        // create the token
+        const token = jwt.sign({emailId:emailId , _id:userPresent._id} ,process.env.JWT_KEY, {expiresIn:60*60})
+        
+        // iss token ko cookies me set krlo
+        res.cookie('token' , token , {maxAge: 60*60*1000});
+
+        return res.status(200).json({succ:true , mess:'logged In Successfullu'})
+
+    } catch (error) {
+        return res.status(401).json({succ:false , mess:error.message})
+    }
+}
 
 // logout
 
