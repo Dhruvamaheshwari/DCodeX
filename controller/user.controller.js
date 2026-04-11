@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken')
 require('dotenv').config()
 
 // register
-const register = async(res , req) => {
+const register = async(req , res) => {
     try {
         
         // check all data is correct or not using the zod validator
@@ -49,7 +49,7 @@ const register = async(res , req) => {
 }
 
 // login 
-const login = async(res ,req) => {
+const login = async(req ,res) => {
     try {
         
         // login via a email and pass
@@ -93,5 +93,13 @@ const login = async(res ,req) => {
 }
 
 // logout
+
+const logout = async(req ,res) => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
 
 // getprofile
