@@ -31,14 +31,14 @@ const userSchema = new Schema({
     role:{
         type:String,
         enum:['user' , 'admin'],
-        default:user,
+        default:'user',
     },
     probleSolved:{
-        type:[string],
+        type:[String],
     },
     password:
     {
-        type:string,
+        type:String,
         required:true,
     }
 } , {timestamps:true} )

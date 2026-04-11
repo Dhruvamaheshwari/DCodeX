@@ -1,6 +1,7 @@
 
+const redisClient = require('../config/redis.js')
 const User = require('../model/user.model')
-const validate = require('../utils/validate')
+const validate = require('../utils/validator.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
@@ -92,14 +93,36 @@ const login = async(req ,res) => {
     }
 }
 
-// logout
-
+// logout => in logout i am using the redis
 const logout = async(req ,res) => {
     try {
+
+        //validate the token {ham ne iska middlware bana diya h to isko route me implement kr denge}
+
+        // Token ko add kr dunga Redis ke blacklist me
+        const {token} = req.cookies
         
+        const payload = jwt.decode(token)
+
+        // add krna hora redis ke ander take user logout kre to blacklist me add ho jaye
+
+            // Add token to Redis blacklist
+            await redisClient.set(`token:${token}` , "Blocked");
+            await redisClient.expireAt(`token:${token}`, payload.exp);
+
+
+
+        // cookis ko clear kr de ...
+        res.cookie('token' , null , { expires: new Date(Date.now())});
+        return res.status(200).json({succ:true , mess:'Logout successfull'})
+
     } catch (error) {
-        
+        return res.status(500).json({succ:false , mess:error.message})
     }
 }
 
 // getprofile
+
+
+// export all the controller
+module.exports = {register , login , logout}
