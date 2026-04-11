@@ -5,13 +5,13 @@ const {Schema , model} = require('mongoose')
 const userSchema = new Schema({
     firstName:{
         type:String,
-        require:true,
+        required:true,
         minLength:3,
         maxLength:20
     },
     lastName:{
         type:String,
-        require:true,
+        required:true,
         minLength:3,
         maxLength:20
     },
@@ -35,6 +35,11 @@ const userSchema = new Schema({
     },
     probleSolved:{
         type:[string],
+    },
+    password:
+    {
+        type:string,
+        required:true,
     }
 } , {timestamps:true} )
 
