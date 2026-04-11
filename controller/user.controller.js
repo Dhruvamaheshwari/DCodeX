@@ -37,7 +37,7 @@ const register = async(req , res) => {
 
 
         // create the token
-        const token = jwt.sign({emailId:emailId , _id:user._id} ,process.env.JWT_KEY, {expiresIn:60*60})
+        const token = jwt.sign({emailId:emailId , role:"user" , _id:user._id} ,process.env.JWT_KEY, {expiresIn:60*60})
 
         // iss token ko cookies me set krlo
         res.cookie('token' , token , {maxAge: 60*60*1000});
@@ -81,7 +81,7 @@ const login = async(req ,res) => {
         // jwt token ko create kr ke return krva sakte h
 
         // create the token
-        const token = jwt.sign({emailId:emailId , _id:userPresent._id} ,process.env.JWT_KEY, {expiresIn:60*60})
+        const token = jwt.sign({emailId:emailId , _id:userPresent._id , role:userPresent.role} ,process.env.JWT_KEY, {expiresIn:60*60})
         
         // iss token ko cookies me set krlo
         res.cookie('token' , token , {maxAge: 60*60*1000});
@@ -101,7 +101,7 @@ const logout = async(req ,res) => {
 
         // Token ko add kr dunga Redis ke blacklist me
         const {token} = req.cookies
-        
+
         const payload = jwt.decode(token)
 
         // add krna hora redis ke ander take user logout kre to blacklist me add ho jaye
@@ -124,5 +124,49 @@ const logout = async(req ,res) => {
 // getprofile
 
 
+// Admin register 
+const adminRegister = async(req , res) => {
+    try {
+        
+        // check all data is correct or not using the zod validator
+        validate(req.body);
+
+        const {firstName , lastName , emailId , password } = req.body;
+        const role = req.body.role = "admin";
+
+        // first checkt that all field are filled or not
+        if(!firstName || !lastName || !emailId || !password)
+        {
+            return res.status(401).json({succ:false , mess:"all Field are required"})
+        }
+
+        // check ki this email id is not exist in my Database
+        const isEmailPrest = await User.findOne({emailId})
+        // OR  // const isEmailPresnt = await User.exists({emailId})
+        if(isEmailPrest)
+        {
+            return res.status(402).json({succ:false , mess:"this email allready exiest"})
+        }
+
+        // hash password
+        const hashPassword = await bcrypt.hash(password , 10);
+
+        // user create
+        const user =  await User.create({firstName , lastName , emailId , password:hashPassword , role})
+
+
+        // create the token
+        const token = jwt.sign({emailId:emailId , role:"admin" , _id:user._id} ,process.env.JWT_KEY, {expiresIn:60*60})
+
+        // iss token ko cookies me set krlo
+        res.cookie('token' , token , {maxAge: 60*60*1000});
+
+        return res.status(200).json({succ:true , mess:"user created successfully"})
+
+    } catch (error) { 
+        return res.status(400).json({succ:false , mess:error.message})
+    }
+} 
+
 // export all the controller
-module.exports = {register , login , logout}
+module.exports = {register , login , logout , adminRegister}

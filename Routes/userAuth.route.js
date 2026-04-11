@@ -1,9 +1,13 @@
 const express = require('express')
 const route = express.Router();
 
-const {register , login , logout} = require('../controller/user.controller')
+const {register , login , logout , adminRegister} = require('../controller/user.controller')
 
 const userMiddleware  = require('../middleware/userMiddleware')
+const adminMiddlware = require('../middleware/adminMiddleware')
+
+// admin Register
+route.post('/admin/register' , adminMiddlware , adminRegister)
 
 // user Register
 route.post('/register' , register);
