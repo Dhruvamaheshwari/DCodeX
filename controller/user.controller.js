@@ -131,8 +131,7 @@ const adminRegister = async(req , res) => {
         // check all data is correct or not using the zod validator
         validate(req.body);
 
-        const {firstName , lastName , emailId , password } = req.body;
-        const role = req.body.role = "admin";
+        const {firstName , lastName , emailId , password, role} = req.body;
 
         // first checkt that all field are filled or not
         if(!firstName || !lastName || !emailId || !password)
@@ -156,7 +155,7 @@ const adminRegister = async(req , res) => {
 
 
         // create the token
-        const token = jwt.sign({emailId:emailId , role:"admin" , _id:user._id} ,process.env.JWT_KEY, {expiresIn:60*60})
+        const token = jwt.sign({emailId:emailId , role:user.role , _id:user._id} ,process.env.JWT_KEY, {expiresIn:60*60})
 
         // iss token ko cookies me set krlo
         res.cookie('token' , token , {maxAge: 60*60*1000});

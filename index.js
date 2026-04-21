@@ -1,8 +1,9 @@
 const express = require('express')
 const app = express();
 require('dotenv').config()
-Port = process.env.PORT || 4000;
+const Port = process.env.PORT || 4000;
 const route = require('./Routes/userAuth.route')
+const ProblemRoute = require('./Routes/problem.route')
 
 // import the cooki
 const cookieParser = require('cookie-parser')
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use( '/user', route);
+app.use('/problem' , ProblemRoute)
 
 const dbconnect = require('./config/db.connect')
 const redisClient = require('./config/redis')
