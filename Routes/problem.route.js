@@ -4,24 +4,25 @@ const problem = require('../model/problem.model');
 const ProblemRoute = express.Router();
 
 const adminMiddlware = require('../middleware/adminMiddleware')
-const createProblem = require('../controller/problem.controller')
+const userMiddleware = require('../middleware/userMiddleware')
+const {createProblem , updareProblem , deleteProblem , getProblemById , getAllProblem , solvedAllProblemByUser} = require('../controller/problem.controller')
 // this is the rotue
 
 // Create 
 ProblemRoute.post('/create',adminMiddlware,createProblem); // ye admin kre ga
 
-// // update
-// ProblemRoute.put('/:id',updareProblem); // ye bhi admin kare ga
+// update
+ProblemRoute.put('/update/:id',adminMiddlware,updareProblem); // ye bhi admin kare ga
 
-// // delete
-// ProblemRoute.delete('/:id',deleteProblem) // ye bhi admin kare ga
+// delete
+ProblemRoute.delete('/delete/:id',adminMiddlware,deleteProblem) // ye bhi admin kare ga
 
-// // fetch
-// ProblemRoute.get('/:id', getProblemById)
-// ProblemRoute.get('/', getAppProblem);
+// fetch
+ProblemRoute.get('/problemById/:id',userMiddleware, getProblemById)
+ProblemRoute.get('/getAllProblem/',userMiddleware, getAllProblem);
 
-// // kis user ne kitni problem solve ki h
-// ProblemRoute.get('/user',solvedAllProblemByUser) 
+// kis user ne kitni problem solve ki h
+ProblemRoute.get('/problemSolvedByuser',userMiddleware,solvedAllProblemByUser) 
 
 // export the ProblmeRouet
-module.exports = ProblemRoute
+module.exports = ProblemRoute 

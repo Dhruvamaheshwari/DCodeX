@@ -1,0 +1,56 @@
+const {Schema , model} = require('mongoose')
+
+// create the new Schema
+
+const submissionSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref:"user",
+        required:true
+    },
+    problemId: {
+        type: Schema.Types.ObjectId,
+        ref:'problem',
+        required:true
+    },
+    Code: {
+        type:String,
+        required:true,
+     },
+    language:{
+        type:String,
+        required:true,
+        enum:['javascript','cpp','java']
+    },
+    status: {
+        type:String,
+        enum:['pending','accepted','wrong','error'],
+        default:'pending',
+    },
+    runtime: {
+        type:Number, // millisecond
+        default:0
+    },
+    memory:{
+        type:Number, // kB
+        default:0,
+    },
+    errorMessage: {
+        type:String,
+        default:''
+    },
+    testCasePassed:{
+        type:Number,
+        default:0
+    },
+    typeCasesTotal:{
+        type:Number,
+        default:0
+    }
+},{timestamp:true})
+
+// create the model
+
+const submission = model("submission" ,submissionSchema);
+
+module.exports = submission
