@@ -1,11 +1,39 @@
 /** @format */
 
-const { getJDoodleLanguageInfo, executeInJDoodle } = require("../utils/ProblemUtility");
-
+const { getPistonLanguage, executeInPiston } = require("../utils/ProblemUtility");
 const problem = require("../model/problem.model.js");
 
+// Helper: Run all test cases (visible + hidden) for a given completeCode
+const validateReferenceSolution = async (completeCode, language, visibleTestCases, hiddenTestCases) => {
+  const allTestCases = [...visibleTestCases, ...hiddenTestCases];
+  for (let i = 0; i < allTestCases.length; i++) {
+    const testCase = allTestCases[i];
+    const result = await executeInPiston(completeCode, language, testCase.input);
 
-// this is create the problem
+    // Any error (compilation, runtime, missing language) -> fail
+    if (result.error) {
+      return {
+        passed: false,
+        message: `Test case ${i + 1} (input: ${testCase.input}) failed with error: ${result.message || result.stderr}`,
+        details: result,
+      };
+    }
+
+    const output = (result.stdout || "").trim();
+    const expected = (testCase.output || "").trim();
+
+    if (output !== expected) {
+      return {
+        passed: false,
+        message: `Test case ${i + 1} (input: ${testCase.input}) output mismatch. Expected: "${expected}", Got: "${output}"`,
+        details: { expected, got: output },
+      };
+    }
+  }
+  return { passed: true };
+};
+
+// ================= CREATE PROBLEM =================
 const createProblem = async (req, res) => {
   const {
     title,
@@ -16,208 +44,148 @@ const createProblem = async (req, res) => {
     hiddenTestCases,
     startCode,
     referenceSolution,
-    problemCreator,
   } = req.body;
 
-  try {
-    for (const { language, completeCode } of referenceSolution) {
-      const languageInfo = getJDoodleLanguageInfo(language);
+  // Basic validation
+  if (!referenceSolution || referenceSolution.length === 0) {
+    return res.status(400).json({ message: "At least one reference solution required" });
+  }
 
-      if (!languageInfo) {
-        return res.status(400).send(`Language ${language} not supported`);
+  try {
+    // Validate each reference solution against ALL test cases (visible + hidden)
+    for (const sol of referenceSolution) {
+      const { completeCode } = sol;
+      const lang = sol.language_id || sol.language;
+      const parsedLanguage = getPistonLanguage(lang);
+
+      if (!parsedLanguage) {
+        return res.status(400).json({ message: `Language ${lang} not supported` });
       }
 
-      for (const testCase of visibleTestCases) {
-        const result = await executeInJDoodle(
-          completeCode,
-          languageInfo.language,
-          languageInfo.versionIndex,
-          testCase.input,
-        );
+      if (!completeCode || completeCode.trim() === "") {
+        return res.status(400).json({ message: "completeCode is missing or empty in referenceSolution" });
+      }
 
-        // JDoodle returns output and statusCode (status 200 means execution was successful, memory/cpu time, etc.)
-        // JDoodle output might have a trailing newline, so we trim to compare
-        if (
-          !result ||
-          !result.output ||
-          result.output.trim() !== testCase.output.trim()
-        ) {
-          return res.status(400).send({
-            message: "Test case failed",
-            expected: testCase.output,
-            actual: result ? result.output : "No output",
-          });
-        }
+      // Run validation
+      const validation = await validateReferenceSolution(
+        completeCode,
+        parsedLanguage,
+        visibleTestCases || [],
+        hiddenTestCases || []
+      );
+
+      if (!validation.passed) {
+        return res.status(400).json({
+          message: `Reference solution for ${parsedLanguage} failed validation.`,
+          reason: validation.message,
+        });
       }
     }
 
-    // auger ye main for loop complete ho gya to uska mtlb h ki user ne jo beja h vo eek dum teeh h
-    // to aab hum iss data to database ke ander store kara sakte h;
-    const userPorble = await problem.create({
+    // All reference solutions passed – save problem
+    const userProblem = await problem.create({
       ...req.body,
       problemCreator: req.result._id,
-    }); // ye req.result._id admin middleware se aai h naki judge0 bale reskult h ok
+    });
 
-    return res.status(200).send("Problem Saved Successfully");
+    return res.status(200).json({ message: "Problem Saved Successfully", problemId: userProblem._id });
   } catch (error) {
-    return res.status(500).json({ succ: false, mess: error.message });
+    console.error("Create problem error:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// this is update the problem
-const updareProblem = async (req, res) => {
+// ================= UPDATE PROBLEM =================
+const updateProblem = async (req, res) => {
   const { id } = req.params;
-  const {
-    title,
-    description,
-    difficulty,
-    tags,
-    visibleTestCases,
-    hiddenTestCases,
-    startCode,
-    referenceSolution,
-    problemCreator,
-  } = req.body;
+  const { visibleTestCases, hiddenTestCases, referenceSolution } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "Missing problem ID" });
+  }
+
   try {
-    // check id aai h ki nhi
-    if (!id) {
-      return res.status(402).json({ succ: false, mess: "Missing ID Field" });
+    const existingProblem = await problem.findById(id);
+    if (!existingProblem) {
+      return res.status(404).json({ message: "Problem not found" });
     }
 
-    // check that id is present in the database or not
-    const isIdPresent = await problem.findById(id);
-    if (!isIdPresent) {
-      return res
-        .status(402)
-        .json({ succ: false, mess: "this Id is not found" });
-    }
+    // If new referenceSolution provided, validate it against test cases
+    if (referenceSolution && referenceSolution.length > 0) {
+      const visible = visibleTestCases || existingProblem.visibleTestCases;
+      const hidden = hiddenTestCases || existingProblem.hiddenTestCases;
 
-    // check kro ki jo data frontend se aaya h vo data sahi chal rha h jese hum ne createProblem krte time kiya tha
-    for (const { language, completeCode } of referenceSolution) {
-      const languageInfo = getJDoodleLanguageInfo(language);
+      for (const sol of referenceSolution) {
+        const { completeCode } = sol;
+        const lang = sol.language_id || sol.language;
+        const parsedLanguage = getPistonLanguage(lang);
 
-      if (!languageInfo) {
-        return res.status(400).send(`Language ${language} not supported`);
-      }
+        if (!parsedLanguage) {
+          return res.status(400).json({ message: `Language ${lang} not supported` });
+        }
 
-      for (const testCase of visibleTestCases) {
-        const result = await executeInJDoodle(
-          completeCode,
-          languageInfo.language,
-          languageInfo.versionIndex,
-          testCase.input,
-        );
+        if (!completeCode || completeCode.trim() === "") {
+          return res.status(400).json({ message: "completeCode missing in referenceSolution" });
+        }
 
-        // JDoodle returns output and statusCode (status 200 means execution was successful, memory/cpu time, etc.)
-        // JDoodle output might have a trailing newline, so we trim to compare
-        if (
-          !result ||
-          !result.output ||
-          result.output.trim() !== testCase.output.trim()
-        ) {
-          return res.status(400).send({
-            message: "Test case failed",
-            expected: testCase.output,
-            actual: result ? result.output : "No output",
+        const validation = await validateReferenceSolution(completeCode, parsedLanguage, visible, hidden);
+        if (!validation.passed) {
+          return res.status(400).json({
+            message: `Reference solution for ${parsedLanguage} failed validation.`,
+            reason: validation.message,
           });
         }
       }
     }
 
-    // update the problem
     const updatedProblem = await problem.findByIdAndUpdate(
       id,
       { ...req.body },
-      { runValidators: true, new: true },
-    ); // ...req.body ka mtlb jo bhi body se aarha h vo s update kro
-    return res.status(200).json({ succ: true, mess: updatedProblem });
+      { runValidators: true, new: true }
+    );
+
+    return res.status(200).json({ success: true, problem: updatedProblem });
   } catch (error) {
-    return res.status(500).json({ succ: false, mess: error.message });
+    console.error("Update problem error:", error);
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// this is delete the problem
+// ================= OTHER APIs =================
 const deleteProblem = async (req, res) => {
   const { id } = req.params;
-
   try {
-    // check id aai h ki nhi
-    if (!id) {
-      return res.status(402).json({ succ: false, mess: "Missing ID Field" });
-    }
-
-    // check that id is present in the database or not
-    const isIdPresent = await problem.findById(id);
-    if (!isIdPresent) {
-      return res.status(402).json({ succ: false, mess: "this Id is not found" });
-    }
-
-    const deletedProblme = await problem.findByIdAndDelete(id, { new: true })
-    return res.status(200).json({ succ: true, mess: deletedProblme })
+    const data = await problem.findByIdAndDelete(id);
+    if (!data) return res.status(404).json({ message: "Problem not found" });
+    return res.status(200).json({ success: true, deletedProblem: data });
   } catch (error) {
-    return res.status(500).json({ succ: false, mess: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// this is get Problem By Id
 const getProblemById = async (req, res) => {
-  const { id } = req.params;
-
   try {
-    // check id aai h ki nhi
-    if (!id) {
-      return res.status(402).json({ succ: false, mess: "Missing ID Field" });
-    }
-
-    // check that id is present in the database or not
-    const isIdPresent = await problem.findById(id);
-    if (!isIdPresent) {
-      return res.status(402).json({ succ: false, mess: "this Id is not found" });
-    }
-
-    // get all the problem
-    const allProblem = await problem.findById(id);
-    return res.status(200).json({succ:true , mess:allProblem});
-
+    const data = await problem.findById(req.params.id);
+    if (!data) return res.status(404).json({ message: "Problem not found" });
+    return res.status(200).json({ success: true, problem: data });
   } catch (error) {
-    return res.status(500).json({ succ: false, mess: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// this is get All Problem
 const getAllProblem = async (req, res) => {
-
   try {
-
-    // in this we appley "pageing"
-    const {page} = req.body
-    const limit = 10;
-    const skip = (page - 1) * limit;
-    
-    // get all the problem
-    const allProblem = await problem.find({}).skip(skip).limit(limit);
-
-    // to check problem present or not
-    if(allProblem.length == 0)
-    {
-      return res.status(404).json({succ:false , mess:"Problems are not present"})
-    }
-
-    return res.status(200).json({succ:true , mess:allProblem});
-
+    const data = await problem.find({});
+    return res.status(200).json({ success: true, problems: data });
   } catch (error) {
-    return res.status(500).json({ succ: false, mess: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-
-// this is solved All Problem By User
-const solvedAllProblemByUser = async (req , res) => {
-
-}
-// export the createProblem
-module.exports = { createProblem, updareProblem, deleteProblem, getProblemById, getAllProblem, solvedAllProblemByUser };
+module.exports = {
+  createProblem,
+  updateProblem,   // Fixed typo: was "updareProblem"
+  deleteProblem,
+  getProblemById,
+  getAllProblem,
+};

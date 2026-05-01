@@ -53,8 +53,8 @@ const ProblemSchema = new Schema(
     ],
     startCode: [
       {
-        language: {
-          type: String,
+        language_id: {
+          type: Number,
           required: true,
         },
         initialCode: {
@@ -65,8 +65,8 @@ const ProblemSchema = new Schema(
     ],
     referenceSolution: [
       {
-        language: {
-          type: String,
+        language_id: {
+          type: Number,
           required: true,
         },
         completeCode: {
