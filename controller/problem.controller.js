@@ -151,7 +151,7 @@ const updateProblem = async (req, res) => {
   }
 };
 
-// ================= OTHER APIs =================
+// ================= Delete =================
 const deleteProblem = async (req, res) => {
   const { id } = req.params;
   try {
@@ -163,9 +163,11 @@ const deleteProblem = async (req, res) => {
   }
 };
 
+// ================= Get Problem by Id =================
 const getProblemById = async (req, res) => {
   try {
-    const data = await problem.findById(req.params.id);
+    // (select) ki help se hum only vahi data send kr sakte h frontend pr jo hame show krna h naki pura data;
+    const data = await problem.findById(req.params.id).select('_id title description difficulty tags visibleTestCases startCode referenceSolution');
     if (!data) return res.status(404).json({ message: "Problem not found" });
     return res.status(200).json({ success: true, problem: data });
   } catch (error) {
@@ -173,9 +175,11 @@ const getProblemById = async (req, res) => {
   }
 };
 
+
+// ================= Get All PROBLEM =================
 const getAllProblem = async (req, res) => {
   try {
-    const data = await problem.find({});
+    const data = await problem.find({}).select('_id title tags difficulty');
     return res.status(200).json({ success: true, problems: data });
   } catch (error) {
     return res.status(500).json({ message: error.message });
