@@ -43,7 +43,7 @@ const submissionSchema = new Schema({
         type:Number,
         default:0
     },
-    typeCasesTotal:{
+    testCasesTotal:{
         type:Number,
         default:0
     }

@@ -80,7 +80,6 @@ const executeInPiston = async (source_code, language, stdin = "") => {
       },
       { headers: { "Content-Type": "application/json" }, timeout: 10000 }
     );
-
     const data = response.data;
 
     // 4. Handle compilation error
