@@ -2,18 +2,22 @@ const express = require('express')
 const app = express();
 require('dotenv').config()
 const Port = process.env.PORT || 4000;
+
 const route = require('./Routes/userAuth.route')
 const ProblemRoute = require('./Routes/problem.route')
+const submitRoute = require('./Routes/submit.route')
 
-// import the cooki
+
+// import the cookie
 const cookieParser = require('cookie-parser')
 
 // middleware
 app.use(express.json());
 app.use(cookieParser());
 
-app.use( '/user', route);
+app.use('/user' , route);
 app.use('/problem' , ProblemRoute)
+app.use('/submission' , submitRoute)
 
 const dbconnect = require('./config/db.connect')
 const redisClient = require('./config/redis')

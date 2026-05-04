@@ -2,7 +2,7 @@
 
 const { getPistonLanguage, executeInPiston } = require("../utils/ProblemUtility");
 const problem = require("../model/problem.model.js");
-
+const User = require('../model/user.model.js');
 // Helper: Run all test cases (visible + hidden) for a given completeCode
 const validateReferenceSolution = async (completeCode, language, visibleTestCases, hiddenTestCases) => {
   const allTestCases = [...visibleTestCases, ...hiddenTestCases];
@@ -186,10 +186,34 @@ const getAllProblem = async (req, res) => {
   }
 };
 
+
+// ================== solved All Problem By User ========================
+const solvedAllProblemByUser = async (req , res) => {
+  try {
+
+    // req.result me user ki sari information hogi kyu ki use login h or hum me middleware me token se sari info req.result me store ki h
+      // const count = req.result.probleSolved.length;
+
+      const userId = req.result._id;
+
+      // populate like join jese kaam krta h like mene user bale schema ke ander ref kiya problem bala schema
+      const user =  await User.findById(userId).populate({
+        path: "probleSolved", // kis ko ka data lana h
+        select:"_id title difficulty tags" // or uss pura data mese kon kon si field leke aana h;
+      })
+
+      return res.status(200).json({succ:true , mess:user})
+
+  } catch (error) {
+      return res.status(500).json({succ:false , mess:errro.message});
+  }
+}
+
 module.exports = {
   createProblem,
   updateProblem,   // Fixed typo: was "updareProblem"
   deleteProblem,
   getProblemById,
   getAllProblem,
+  solvedAllProblemByUser
 };

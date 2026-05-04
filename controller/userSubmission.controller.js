@@ -72,6 +72,12 @@ const submitCode = async(req , res) => {
         // submitResult  ko update karo
         await submitResult.save();
 
+        // problem id ko insert kre ge user schema ke problemSolved me if is not present there
+        if(!req.result.probleSolved.includes(problemId)){ // pehse "includes" ki help se check kiya ki problemId present h ki nhi h;
+            req.result.probleSolved.push(problemId);
+            await req.result.save();
+        }
+
         return res.status(200).json({
             succ: true,
             status: finalStatus,
@@ -79,7 +85,7 @@ const submitCode = async(req , res) => {
             testCasesTotal: Problem.hiddenTestCases.length,
             errorMessage: errorMessage,
             submissionId: submitResult._id
-        });
+        }); 
 
     } catch (error) {
         console.error(error);

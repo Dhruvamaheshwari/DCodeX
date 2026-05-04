@@ -6,3 +6,6 @@ const submitRoute = express.Router();
 
 
 submitRoute.post('/submit/:id' , userMiddleware , submitCode)
+
+// export the submitRoute
+module.exports = submitRoute

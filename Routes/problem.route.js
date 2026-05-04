@@ -22,7 +22,7 @@ ProblemRoute.get('/problemById/:id',userMiddleware, getProblemById)
 ProblemRoute.get('/getAllProblem/',userMiddleware, getAllProblem);
 
 // kis user ne kitni problem solve ki h
-// ProblemRoute.get('/problemSolvedByuser',userMiddleware,solvedAllProblemByUser) 
+ProblemRoute.get('/problemSolvedByuser',userMiddleware,solvedAllProblemByUser) 
 
 // export the ProblmeRouet
 module.exports = ProblemRoute 
