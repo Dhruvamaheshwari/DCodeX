@@ -1,7 +1,7 @@
 const express = require('express')
 const route = express.Router();
 
-const {register , login , logout , adminRegister} = require('../controller/user.controller')
+const {register , login , logout , adminRegister , deleteProfile} = require('../controller/user.controller')
 
 const userMiddleware  = require('../middleware/userMiddleware')
 const adminMiddlware = require('../middleware/adminMiddleware')
@@ -20,6 +20,9 @@ route.post('/logout',userMiddleware , logout);
 
 // get profile
 // route.get('/getprofile' , getprofile);
+
+// delete the profile
+route.delete('/profile' , userMiddleware , deleteProfile)
 
 // export the route
 module.exports = route;

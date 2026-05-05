@@ -3,6 +3,7 @@
 const { getPistonLanguage, executeInPiston } = require("../utils/ProblemUtility");
 const problem = require("../model/problem.model.js");
 const User = require('../model/user.model.js');
+const submission = require('../model/submission.model.js')
 // Helper: Run all test cases (visible + hidden) for a given completeCode
 const validateReferenceSolution = async (completeCode, language, visibleTestCases, hiddenTestCases) => {
   const allTestCases = [...visibleTestCases, ...hiddenTestCases];
@@ -206,6 +207,32 @@ const solvedAllProblemByUser = async (req , res) => {
 
   } catch (error) {
       return res.status(500).json({succ:false , mess:errro.message});
+  }
+}
+
+
+
+const submittedProblem = async(req  ,res) => {
+  try {
+      const userId = req.result._id;
+
+      const problemId = req.params.pid;
+
+      if(!problemId)
+      {
+        return res.status(404).json({succ:false , mess:"Id not found"})
+      }
+
+      const ans = await submission.find({userId , problemId})
+
+      if(ans.length == 0)
+      {
+        return res.status(200).json({succ:true , mess:"No submission is present"})
+      }
+      
+      return res.status(200).json({succ:true , mess:ans})
+  } catch (error) {
+    return res.status(500).json({succ:false , mess:error.message})
   }
 }
 

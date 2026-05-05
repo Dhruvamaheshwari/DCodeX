@@ -49,8 +49,11 @@ const submissionSchema = new Schema({
     }
 },{timestamp:true})
 
-// create the model
+// create the index for the submission for find the solved problem 
+// 1 => assinding order and -1 => descending order
+submissionSchema.index({userId:1 , problemId:1}) // inn dono ki help se compound index create ho gay h;
 
+// create the model
 const submission = model("submission" ,submissionSchema);
 
 module.exports = submission

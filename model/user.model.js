@@ -48,7 +48,15 @@ const userSchema = new Schema({
 } , {timestamps:true} )
 
 
+// post function {ye jb chale ga jb sare chal jaye ge}
+userSchema.post('findOneAndDelete' , async function (userInfo){ // ye fucn. tab chalge ga jab hum findOneAndDelete call kre ge
+    if(userInfo) // userInfo => jb hum eek user ko delete kre ge to use ki info ko return karate h ki ye user delete ho gay h to vo info userInfo ke ander store h
+    {
+        await mongoose.model('submission').deleteMany({userId: userInfo._id});
+    }
+});
+
 // creat the model
 const User = model('user' , userSchema)
 
-module.exports = User;
+module.exports = User; 

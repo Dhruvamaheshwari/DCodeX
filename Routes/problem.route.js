@@ -5,7 +5,7 @@ const ProblemRoute = express.Router();
 
 const adminMiddlware = require('../middleware/adminMiddleware')
 const userMiddleware = require('../middleware/userMiddleware')
-const {createProblem , updateProblem , deleteProblem , getProblemById , getAllProblem , solvedAllProblemByUser} = require('../controller/problem.controller')
+const {createProblem , updateProblem , deleteProblem , getProblemById , getAllProblem , solvedAllProblemByUser , submittedProblem} = require('../controller/problem.controller')
 // this is the rotue
 
 // Create 
@@ -23,6 +23,9 @@ ProblemRoute.get('/getAllProblem/',userMiddleware, getAllProblem);
 
 // kis user ne kitni problem solve ki h
 ProblemRoute.get('/problemSolvedByuser',userMiddleware,solvedAllProblemByUser) 
+
+//  
+ProblemRoute.get('/submittedProblem/:pid' , userMiddleware , submittedProblem)
 
 // export the ProblmeRouet
 module.exports = ProblemRoute 

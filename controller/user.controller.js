@@ -1,6 +1,7 @@
 
 const redisClient = require('../config/redis.js')
 const User = require('../model/user.model')
+const submission = require('../model/submission.model.js')
 const validate = require('../utils/validator.js')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -166,6 +167,30 @@ const adminRegister = async(req , res) => {
         return res.status(400).json({succ:false , mess:error.message})
     }
 } 
+
+
+// delete Profile
+const deleteProfile = async (req  ,res) => {
+    try {
+        const userId = req.result._id;
+
+        if(!userId)
+        {
+            return res.status(404).json({succ:false , mess:"Id Not Found"})
+        }
+
+        // iss se to user ki profile delete ho gai
+        await User.findByIdAndDelete(userId);
+
+        // aab hame uss user ke sare submission bhi delete kre pde ge
+        await submission.deleteMany({userId});
+
+        return res.status(200).json({succ:ture , mess:"deleted successfully"})
+
+    } catch (error) {
+        return res.status(400).json({succ:false , mess:error.message});
+    }
+}
 
 // export all the controller
 module.exports = {register , login , logout , adminRegister}
