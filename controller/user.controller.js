@@ -193,4 +193,4 @@ const deleteProfile = async (req  ,res) => {
 }
 
 // export all the controller
-module.exports = {register , login , logout , adminRegister}
+module.exports = {register , login , logout , adminRegister , deleteProfile}

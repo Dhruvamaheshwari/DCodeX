@@ -242,5 +242,6 @@ module.exports = {
   deleteProblem,
   getProblemById,
   getAllProblem,
-  solvedAllProblemByUser
+  solvedAllProblemByUser,
+  submittedProblem
 };
