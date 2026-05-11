@@ -1,12 +1,19 @@
 
+import {Routes , Route} from "react-router";
+import HomePage from "./pages/HomePage";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 
 function App() {
   return (
-    <div className="bg-blue-100 p-8 text-center">
-      <h1 className="text-3xl font-bold ">Test Page</h1>
-      <button className="btn btn-primary mt-4">DaisyUI Button</button>
-    </div>
+    <>
+      <Routes>
+          <Route path="/" element={<HomePage></HomePage>}></Route>
+          <Route path="/login" element={<Login></Login>}></Route>
+          <Route path="/signup" element={<Signup></Signup>}></Route>
+      </Routes>
+    </>
   );
 }
 export default App;
