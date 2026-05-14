@@ -43,7 +43,14 @@ const register = async(req , res) => {
         // iss token ko cookies me set krlo
         res.cookie('token' , token , {maxAge: 60*60*1000});
 
-        return res.status(200).json({succ:true , mess:"user created successfully"})
+        
+        const reply = {
+            firstName : user.firstName,
+            emailId: user.emailId,
+            _id: user._id
+        }
+
+        return res.status(200).json({succ:true ,user:reply, mess:"user created successfully"})
 
     } catch (error) { 
         return res.status(400).json({succ:false , mess:error.message})
@@ -87,7 +94,13 @@ const login = async(req ,res) => {
         // iss token ko cookies me set krlo
         res.cookie('token' , token , {maxAge: 60*60*1000});
 
-        return res.status(200).json({succ:true , mess:'logged In Successfullu'})
+        const reply = {
+            firstName : userPresent.firstName,
+            emailId: userPresent.emailId,
+            _id: userPresent._id
+        }
+
+        return res.status(200).json({succ:true , user:reply , mess:"loggin successfully"})
 
     } catch (error) {
         return res.status(401).json({succ:false , mess:error.message})
