@@ -1,15 +1,27 @@
 /** @format */
 
-const { getPistonLanguage, executeInPiston } = require("../utils/ProblemUtility");
+const {
+  getPistonLanguage,
+  executeInPiston,
+} = require("../utils/ProblemUtility");
 const problem = require("../model/problem.model.js");
-const User = require('../model/user.model.js');
-const submission = require('../model/submission.model.js')
+const User = require("../model/user.model.js");
+const submission = require("../model/submission.model.js");
 // Helper: Run all test cases (visible + hidden) for a given completeCode
-const validateReferenceSolution = async (completeCode, language, visibleTestCases, hiddenTestCases) => {
+const validateReferenceSolution = async (
+  completeCode,
+  language,
+  visibleTestCases,
+  hiddenTestCases,
+) => {
   const allTestCases = [...visibleTestCases, ...hiddenTestCases];
   for (let i = 0; i < allTestCases.length; i++) {
     const testCase = allTestCases[i];
-    const result = await executeInPiston(completeCode, language, testCase.input);
+    const result = await executeInPiston(
+      completeCode,
+      language,
+      testCase.input,
+    );
 
     // Any error (compilation, runtime, missing language) -> fail
     if (result.error) {
@@ -49,7 +61,9 @@ const createProblem = async (req, res) => {
 
   // Basic validation
   if (!referenceSolution || referenceSolution.length === 0) {
-    return res.status(400).json({ message: "At least one reference solution required" });
+    return res
+      .status(400)
+      .json({ message: "At least one reference solution required" });
   }
 
   try {
@@ -60,11 +74,17 @@ const createProblem = async (req, res) => {
       const parsedLanguage = getPistonLanguage(lang);
 
       if (!parsedLanguage) {
-        return res.status(400).json({ message: `Language ${lang} not supported` });
+        return res
+          .status(400)
+          .json({ message: `Language ${lang} not supported` });
       }
 
       if (!completeCode || completeCode.trim() === "") {
-        return res.status(400).json({ message: "completeCode is missing or empty in referenceSolution" });
+        return res
+          .status(400)
+          .json({
+            message: "completeCode is missing or empty in referenceSolution",
+          });
       }
 
       // Run validation
@@ -72,7 +92,7 @@ const createProblem = async (req, res) => {
         completeCode,
         parsedLanguage,
         visibleTestCases || [],
-        hiddenTestCases || []
+        hiddenTestCases || [],
       );
 
       if (!validation.passed) {
@@ -89,7 +109,12 @@ const createProblem = async (req, res) => {
       problemCreator: req.result._id,
     });
 
-    return res.status(200).json({ message: "Problem Saved Successfully", problemId: userProblem._id });
+    return res
+      .status(200)
+      .json({
+        message: "Problem Saved Successfully",
+        problemId: userProblem._id,
+      });
   } catch (error) {
     console.error("Create problem error:", error);
     return res.status(500).json({ message: error.message });
@@ -122,14 +147,23 @@ const updateProblem = async (req, res) => {
         const parsedLanguage = getPistonLanguage(lang);
 
         if (!parsedLanguage) {
-          return res.status(400).json({ message: `Language ${lang} not supported` });
+          return res
+            .status(400)
+            .json({ message: `Language ${lang} not supported` });
         }
 
         if (!completeCode || completeCode.trim() === "") {
-          return res.status(400).json({ message: "completeCode missing in referenceSolution" });
+          return res
+            .status(400)
+            .json({ message: "completeCode missing in referenceSolution" });
         }
 
-        const validation = await validateReferenceSolution(completeCode, parsedLanguage, visible, hidden);
+        const validation = await validateReferenceSolution(
+          completeCode,
+          parsedLanguage,
+          visible,
+          hidden,
+        );
         if (!validation.passed) {
           return res.status(400).json({
             message: `Reference solution for ${parsedLanguage} failed validation.`,
@@ -142,7 +176,7 @@ const updateProblem = async (req, res) => {
     const updatedProblem = await problem.findByIdAndUpdate(
       id,
       { ...req.body },
-      { runValidators: true, new: true }
+      { runValidators: true, new: true },
     );
 
     return res.status(200).json({ success: true, problem: updatedProblem });
@@ -168,7 +202,11 @@ const deleteProblem = async (req, res) => {
 const getProblemById = async (req, res) => {
   try {
     // (select) ki help se hum only vahi data send kr sakte h frontend pr jo hame show krna h naki pura data;
-    const data = await problem.findById(req.params.id).select('_id title description difficulty tags visibleTestCases startCode referenceSolution');
+    const data = await problem
+      .findById(req.params.id)
+      .select(
+        "_id title description difficulty tags visibleTestCases startCode referenceSolution",
+      );
     if (!data) return res.status(404).json({ message: "Problem not found" });
     return res.status(200).json({ success: true, problem: data });
   } catch (error) {
@@ -176,72 +214,95 @@ const getProblemById = async (req, res) => {
   }
 };
 
-
 // ================= Get All PROBLEM =================
 const getAllProblem = async (req, res) => {
   try {
-    const data = await problem.find({}).select('_id title tags difficulty');
-    return res.status(200).json({ success: true, problems: data });
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const { difficulty, tags, id } = req.query;
+
+    let query = {};
+    if (difficulty && difficulty !== "all") {
+      query.difficulty = difficulty;
+    }
+    if (tags && tags !== "all") {
+      query.tags = tags;
+    }
+    if (id && id !== "all") {
+      query._id = id;
+    }
+
+    const totalProblems = await problem.countDocuments(query);
+    const data = await problem
+      .find(query)
+      .select("_id title tags difficulty")
+      .skip(skip)
+      .limit(limit);
+
+    return res.status(200).json({
+      success: true,
+      problems: data,
+      totalPages: Math.ceil(totalProblems / limit),
+      currentPage: page,
+      totalProblems,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
 };
 
-
 // ================== solved All Problem By User ========================
-const solvedAllProblemByUser = async (req , res) => {
+const solvedAllProblemByUser = async (req, res) => {
   try {
-
     // req.result me user ki sari information hogi kyu ki use login h or hum me middleware me token se sari info req.result me store ki h
-      // const count = req.result.probleSolved.length;
+    // const count = req.result.probleSolved.length;
 
-      const userId = req.result._id;
+    const userId = req.result._id;
 
-      // populate like join jese kaam krta h like mene user bale schema ke ander ref kiya problem bala schema
-      const user =  await User.findById(userId).populate({
-        path: "probleSolved", // kis ko ka data lana h
-        select:"_id title difficulty tags" // or uss pura data mese kon kon si field leke aana h;
-      })
+    // populate like join jese kaam krta h like mene user bale schema ke ander ref kiya problem bala schema
+    const user = await User.findById(userId).populate({
+      path: "probleSolved", // kis ko ka data lana h
+      select: "_id title difficulty tags", // or uss pura data mese kon kon si field leke aana h;
+    });
 
-      return res.status(200).json({succ:true , mess:user})
-
+    return res.status(200).json({ succ: true, mess: user });
   } catch (error) {
-      return res.status(500).json({succ:false , mess:errro.message});
+    return res.status(500).json({ succ: false, mess: errro.message });
   }
-}
+};
 
-
-
-const submittedProblem = async(req  ,res) => {
+const submittedProblem = async (req, res) => {
   try {
-      const userId = req.result._id;
+    const userId = req.result._id;
 
-      const problemId = req.params.pid;
+    const problemId = req.params.pid;
 
-      if(!problemId)
-      {
-        return res.status(404).json({succ:false , mess:"Id not found"})
-      }
+    if (!problemId) {
+      return res.status(404).json({ succ: false, mess: "Id not found" });
+    }
 
-      const ans = await submission.find({userId , problemId})
+    const ans = await submission.find({ userId, problemId });
 
-      if(ans.length == 0)
-      {
-        return res.status(200).json({succ:true , mess:"No submission is present"})
-      }
-      
-      return res.status(200).json({succ:true , mess:ans})
+    if (ans.length == 0) {
+      return res
+        .status(200)
+        .json({ succ: true, mess: "No submission is present" });
+    }
+
+    return res.status(200).json({ succ: true, mess: ans });
   } catch (error) {
-    return res.status(500).json({succ:false , mess:error.message})
+    return res.status(500).json({ succ: false, mess: error.message });
   }
-}
+};
 
 module.exports = {
   createProblem,
-  updateProblem,   // Fixed typo: was "updareProblem"
+  updateProblem, // Fixed typo: was "updareProblem"
   deleteProblem,
   getProblemById,
   getAllProblem,
   solvedAllProblemByUser,
-  submittedProblem
+  submittedProblem,
 };

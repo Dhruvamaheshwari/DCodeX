@@ -1,5 +1,7 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axiosClient from './utils/axiosClient';
+/** @format */
+
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axiosClient from "./utils/axiosClient";
 
 const initialState = {
   user: null,
@@ -9,57 +11,64 @@ const initialState = {
 };
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  "auth/register",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.post('/user/register', userData);
+      const response = await axiosClient.post("/user/register", userData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+      return rejectWithValue(
+        error.response?.data?.message || "Registration failed",
+      );
     }
-  }
+  },
 );
 
 export const loginUser = createAsyncThunk(
-  'auth/loginUser',
+  "auth/loginUser",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.post('/auth/login', credentials);
+      const response = await axiosClient.post("/user/login", credentials);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Login failed');
+      return rejectWithValue(error.response?.data?.message || "Login failed");
     }
-  }
+  },
 );
 
 export const checkAuth = createAsyncThunk(
-  'auth/checkAuth',
+  "auth/checkAuth",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.get('/auth/me');
+      const response = await axiosClient.get("/user/check");
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Not authenticated');
+      return rejectWithValue(
+        error.response?.data?.message || "Not authenticated",
+      );
     }
-  }
+  },
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logoutUser',
+  "auth/logoutUser",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axiosClient.post('/auth/logout');
+      const response = await axiosClient.post("/user/logout");
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Logout failed');
+      return rejectWithValue(error.response?.data?.message || "Logout failed");
     }
-  }
+  },
 );
 
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -75,7 +84,7 @@ const authSlice = createSlice({
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
-         state.user = null;
+        state.user = null;
       })
       .addCase(loginUser.pending, (state) => {
         state.isLoading = true;
