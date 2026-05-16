@@ -6,6 +6,7 @@ import Signup from "./pages/Signup";
 import {checkAuth} from './authSlice'
 import { useDispatch , useSelector} from "react-redux";
 import { useEffect } from "react";
+import AdminPanel from "./adminPage/AdminPanel";
 
 function App() {
 
@@ -30,6 +31,7 @@ function App() {
           <Route path="/" element={<HomePage></HomePage>}></Route>
           <Route path="/login" element={<Login></Login>}></Route>
           <Route path="/signup" element={<Signup></Signup>}></Route>
+          <Route path="/admin" element={<AdminPanel></AdminPanel>}></Route>
       </Routes>
     </>
   );

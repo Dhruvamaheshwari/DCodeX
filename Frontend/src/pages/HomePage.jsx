@@ -1,6 +1,5 @@
 
 
-
 import { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
 import { useSelector, useDispatch } from "react-redux";
@@ -40,6 +39,7 @@ const HomePage = () => {
           }
         })
         .catch((err) => console.log(err));
+
     }
   }, [isAuthenticated, page, difficultyFilter, tagFilter, titleFilter]);
 
@@ -55,6 +55,7 @@ const HomePage = () => {
         })
         .catch((err) => console.log(err));
     }
+    
   }, [isAuthenticated]);
 
   const handleLogout = () => {
@@ -141,6 +142,7 @@ const HomePage = () => {
                   }}
                 >
                   <option value="all">All Topics</option>
+                  {/* for try */}
                   <option value="array">Array</option>
                   <option value="linklist">Linked List</option>
                   <option value="graph">Graph</option>
@@ -150,7 +152,7 @@ const HomePage = () => {
                 <select
                   className="select select-bordered w-full max-w-xs focus:outline-none p-3 "
                   value={difficultyFilter}
-                  onChange={(e) => {
+                 onChange={(e) => {
                     setDifficultyFilter(e.target.value)
                     setPage(1)
                   }}
@@ -187,14 +189,14 @@ const HomePage = () => {
                           {prob.title}
                         </td>
                         <td>
-                          <div className={`badge badge-outline ${prob.difficulty === 'easy' ? 'badge-success' :
+                          <div className={`badge  badge-soft ${prob.difficulty === 'easy' ? 'badge-success' :
                             prob.difficulty === 'medium' ? 'badge-warning' : 'badge-error'
-                            } bg-green-900/80`}>
+                            } `}>
                             {prob.difficulty}
                           </div>
                         </td>
                         <td>
-                          <div className="badge badge-info badge-outline lowercase bg-blue-900/80">
+                          <div className="badge badge-info badge-soft lowercase ">
                             {prob.tags}
                           </div>
                         </td>
