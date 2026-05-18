@@ -1,7 +1,36 @@
 import { useState } from "react";
+import { z } from "zod";
 import axiosClient from "../utils/axiosClient"; // Assuming you use this for API calls
 
+
+// this is Zod validation
+const testCaseSchema = z.object({
+    input: z.string().min(1, "Input is required"),
+    output: z.string().min(1, "Output is required"),
+    explanation: z.string().optional()
+});
+
+const codeSchema = z.object({
+    language_id: z.coerce.number().min(1, "Language ID is required"),
+    language: z.string().optional(),
+    initialCode: z.string().optional(),
+    completeCode: z.string().optional()
+});
+
+const problemSchema = z.object({
+    title: z.string().min(3, "Title must be at least 3 characters"),
+    description: z.string().min(10, "Description must be at least 10 characters"),
+    difficulty: z.enum(["easy", "medium", "hard"]),
+    tags: z.string().min(1, "Tag is required"),
+    visibleTestCases: z.array(testCaseSchema).min(1, "At least one visible test case is required"),
+    hiddenTestCases: z.array(testCaseSchema).min(1, "At least one hidden test case is required"),
+    startCode: z.array(codeSchema).min(1, "At least one start code template is required"),
+    referenceSolution: z.array(codeSchema).min(1, "At least one reference solution is required"),
+});
+
+// this is admin Panel
 const AdminPanel = () => {
+    const [errors, setErrors] = useState([]);
     const [formData, setFormData] = useState({
         title: "",
         description: "",
@@ -36,6 +65,7 @@ const AdminPanel = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrors([]);
         try {
             // Function to map language_id to string matching piston format
             const getLangName = (id) => {
@@ -58,13 +88,20 @@ const AdminPanel = () => {
                 }))
             };
 
+            // Validate with Zod
+            const parsedData = problemSchema.parse(payload);
+
             // Replace with your actual endpoint
-            const response = await axiosClient.post("/problem/create", payload);
+            const response = await axiosClient.post("/problem/create", parsedData);
             alert("Problem created successfully!");
             console.log(response.data);
         } catch (error) {
-            console.error("Error creating problem:", error);
-            alert("Failed to create problem.");
+            if (error instanceof z.ZodError) {
+                setErrors(error.errors.map(err => err.message));
+            } else {
+                console.error("Error creating problem:", error);
+                alert("Failed to create problem.");
+            }
         }
     };
 
@@ -72,6 +109,14 @@ const AdminPanel = () => {
         <div className="min-h-screen bg-base-200 p-8">
             <div className="max-w-4xl mx-auto bg-base-100 p-8 rounded-xl shadow-lg">
                 <h1 className="text-3xl font-bold mb-6">Create New Problem</h1>
+
+                {errors.length > 0 && (
+                    <div className="alert alert-error mb-6">
+                        <ul>
+                            {errors.map((err, i) => <li key={i}>{err}</li>)}
+                        </ul>
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Basic Information */}
