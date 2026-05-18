@@ -47,7 +47,8 @@ const register = async(req , res) => {
         const reply = {
             firstName : user.firstName,
             emailId: user.emailId,
-            _id: user._id
+            _id: user._id,
+            role:user.role,
         }
 
         return res.status(200).json({succ:true ,user:reply, mess:"user created successfully"})
@@ -97,7 +98,8 @@ const login = async(req ,res) => {
         const reply = {
             firstName : userPresent.firstName,
             emailId: userPresent.emailId,
-            _id: userPresent._id
+            _id: userPresent._id,
+            role:userPresent.role,
         }
 
         return res.status(200).json({succ:true , user:reply , mess:"loggin successfully"})
