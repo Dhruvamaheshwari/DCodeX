@@ -80,11 +80,9 @@ const createProblem = async (req, res) => {
       }
 
       if (!completeCode || completeCode.trim() === "") {
-        return res
-          .status(400)
-          .json({
-            message: "completeCode is missing or empty in referenceSolution",
-          });
+        return res.status(400).json({
+          message: "completeCode is missing or empty in referenceSolution",
+        });
       }
 
       // Run validation
@@ -109,12 +107,10 @@ const createProblem = async (req, res) => {
       problemCreator: req.result._id,
     });
 
-    return res
-      .status(200)
-      .json({
-        message: "Problem Saved Successfully",
-        problemId: userProblem._id,
-      });
+    return res.status(200).json({
+      message: "Problem Saved Successfully",
+      problemId: userProblem._id,
+    });
   } catch (error) {
     console.error("Create problem error:", error);
     return res.status(500).json({ message: error.message });
@@ -201,12 +197,19 @@ const deleteProblem = async (req, res) => {
 // ================= Get Problem by Id =================
 const getProblemById = async (req, res) => {
   try {
-    // (select) ki help se hum only vahi data send kr sakte h frontend pr jo hame show krna h naki pura data;
-    const data = await problem
-      .findById(req.params.id)
-      .select(
-        "_id title description difficulty tags visibleTestCases startCode referenceSolution",
-      );
+    // If request comes from an admin, return all data, else return limited data.
+    // Assuming `req.result` contains the logged-in user and `req.result.role === 'admin'` indicates an admin
+    let data;
+    if (req.result && req.result.role === "admin") {
+      data = await problem.findById(req.params.id);
+    } else {
+      data = await problem
+        .findById(req.params.id)
+        .select(
+          "_id title description difficulty tags visibleTestCases startCode referenceSolution",
+        );
+    }
+
     if (!data) return res.status(404).json({ message: "Problem not found" });
     return res.status(200).json({ success: true, problem: data });
   } catch (error) {
