@@ -55,7 +55,7 @@ const HomePage = () => {
         })
         .catch((err) => console.log(err));
     }
-    
+
   }, [isAuthenticated]);
 
   const handleLogout = () => {
@@ -79,6 +79,11 @@ const HomePage = () => {
           <a className="text-2xl font-bold text-primary cursor-pointer">DCodeX</a>
         </div>
         <div className="flex-none gap-4">
+          {isAuthenticated && user?.role === 'admin' && (
+            <button className="btn btn-secondary btn-sm" onClick={() => navigate('/admin')}>
+              Admin Panel
+            </button>
+          )}
           {isAuthenticated && user ? (
             <div className="dropdown dropdown-end">
               <div tabIndex={0} role="button" className="btn btn-ghost m-1 text-lg font-semibold border border-base-300">
@@ -152,7 +157,7 @@ const HomePage = () => {
                 <select
                   className="select select-bordered w-full max-w-xs focus:outline-none p-3 "
                   value={difficultyFilter}
-                 onChange={(e) => {
+                  onChange={(e) => {
                     setDifficultyFilter(e.target.value)
                     setPage(1)
                   }}

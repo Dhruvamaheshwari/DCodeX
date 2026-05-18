@@ -18,8 +18,7 @@ function App() {
     dispatch(checkAuth())
   } , [dispatch])
 
-  console.log(user)
-  console.log(isAuthenticated)
+
 
   if(isLoading)
   {
@@ -27,7 +26,7 @@ function App() {
       <span className="loading loading-spinner loading-xl"></span>
     </div>
   }
-
+ 
   return (
     <>
       <Routes>
