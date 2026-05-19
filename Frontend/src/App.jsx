@@ -7,6 +7,7 @@ import {checkAuth} from './authSlice'
 import { useDispatch , useSelector} from "react-redux";
 import { useEffect } from "react";
 import AdminPanel from "./adminPage/AdminPanel";
+import CodeEditor from "./pages/CodeEditor";
 
 function App() {
 
@@ -36,6 +37,7 @@ function App() {
           {/* <Route path="/admin" element={<AdminPanel></AdminPanel>}></Route> */}
           {/* hum url se hit kre ge to pura page reload hota h to jo admin bhi hoga vo bhi admin page ko access nhi kr paye ga isliye hum navlink ka use krete h */}
           <Route path="/admin" element={isAuthenticated && user?.role === 'admin'? <AdminPanel></AdminPanel> : <Navigate to='/'/>}/>
+          <Route path="/code" element={<CodeEditor/>}/>
       </Routes>
     </>
   );
