@@ -185,12 +185,16 @@ const HomePage = () => {
                 <tbody>
                   {problems.length > 0 ? (
                     problems.map((prob) => (
-                      <tr key={prob._id} className="hover">
+                      <tr
+                        key={prob._id}
+                        className="hover cursor-pointer"
+                        onClick={() => navigate(`/problem/${prob._id}`)}
+                      >
                         <td>
                           {/* Empty circle for solved status outline */}
                           <div className="w-5 h-5 rounded-full border-2 border-base-content/20 bg-base-200"></div>
                         </td>
-                        <td className="font-medium text-lg cursor-pointer hover:text-primary transition-colors">
+                        <td className="font-medium text-lg hover:text-primary transition-colors">
                           {prob.title}
                         </td>
                         <td>

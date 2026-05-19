@@ -37,7 +37,7 @@ function App() {
           {/* <Route path="/admin" element={<AdminPanel></AdminPanel>}></Route> */}
           {/* hum url se hit kre ge to pura page reload hota h to jo admin bhi hoga vo bhi admin page ko access nhi kr paye ga isliye hum navlink ka use krete h */}
           <Route path="/admin" element={isAuthenticated && user?.role === 'admin'? <AdminPanel></AdminPanel> : <Navigate to='/'/>}/>
-          <Route path="/code" element={<CodeEditor/>}/>
+          <Route path="/problem/:problemId" element={<CodeEditor/>}/>
       </Routes>
     </>
   );
