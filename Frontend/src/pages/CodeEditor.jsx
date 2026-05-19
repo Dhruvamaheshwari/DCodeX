@@ -27,6 +27,14 @@ const CodeEditor = () => {
   const [submissions, setSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(false);
 
+  // Execution and Submission states
+  const [runningCode, setRunningCode] = useState(false);
+  const [submittingCode, setSubmittingCode] = useState(false);
+  const [consoleTab, setConsoleTab] = useState('testcases'); // 'testcases' | 'result'
+  const [testResults, setTestResults] = useState(null);
+  const [runError, setRunError] = useState(null);
+  const [submitResult, setSubmitResult] = useState(null);
+
   // Map language_id from backend to standard language names used by Monaco editor
   const getMonacoLanguage = (langId) => {
     const langMap = {
@@ -111,6 +119,63 @@ const CodeEditor = () => {
     setCodeMap(prev => ({ ...prev, [language]: newCode }));
   };
 
+  const handleRunCode = async () => {
+    if (!code.trim()) return;
+    try {
+      setRunningCode(true);
+      setRunError(null);
+      setTestResults(null);
+      setConsoleTab('result'); // auto-switch to result tab
+
+      const res = await axiosClient.post(`/submission/run/${problemId}`, {
+        Code: code,
+        language: language
+      });
+
+      if (res.data.succ) {
+        setTestResults(res.data.testResults);
+        if (res.data.isError) {
+          setRunError(res.data.errorMessage);
+        }
+      } else {
+        setRunError(res.data.mess || 'Failed to run code');
+      }
+    } catch (err) {
+      console.error(err);
+      setRunError(err.response?.data?.mess || err.message || 'An error occurred while running the code.');
+    } finally {
+      setRunningCode(false);
+    }
+  };
+
+  const handleSubmitCode = async () => {
+    if (!code.trim()) return;
+    try {
+      setSubmittingCode(true);
+      setActiveTab('submissions'); // auto-switch to submissions tab
+
+      const res = await axiosClient.post(`/submission/submit/${problemId}`, {
+        Code: code,
+        language: language
+      });
+
+      if (res.data.succ) {
+        setSubmitResult(res.data);
+        // Refresh submissions
+        const subRes = await axiosClient.get(`/problem/submittedProblem/${problemId}`);
+        if (subRes.data.succ) {
+          setSubmissions(Array.isArray(subRes.data.mess) ? subRes.data.mess : []);
+        }
+      } else {
+        // handle submission failure gracefully if needed
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubmittingCode(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-base-300">
@@ -141,12 +206,24 @@ const CodeEditor = () => {
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn btn-sm btn-ghost text-success">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1 inline"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>
+          <button
+            className="btn btn-sm btn-ghost text-success"
+            onClick={handleRunCode}
+            disabled={runningCode || submittingCode}
+          >
+            {runningCode ? <span className="loading loading-spinner loading-xs"></span> : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1 inline"><path fillRule="evenodd" d="M4.5 5.653c0-1.427 1.529-2.33 2.779-1.643l11.54 6.347c1.295.712 1.295 2.573 0 3.286L7.28 19.99c-1.25.687-2.779-.217-2.779-1.643V5.653Z" clipRule="evenodd" /></svg>
+            )}
             Run
           </button>
-          <button className="btn btn-sm btn-success text-success-content flex items-center gap-1">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.5 3.75a6 6 0 0 0-5.98 6.496A5.25 5.25 0 0 0 6.75 20.25H18a4.5 4.5 0 0 0 2.206-8.423 3.75 3.75 0 0 0-4.133-4.303A6.001 6.001 0 0 0 10.5 3.75Zm2.03 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v4.94a.75.75 0 0 0 1.5 0v-4.94l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" /></svg>
+          <button
+            className="btn btn-sm btn-success text-success-content flex items-center gap-1"
+            onClick={handleSubmitCode}
+            disabled={runningCode || submittingCode}
+          >
+            {submittingCode ? <span className="loading loading-spinner loading-xs"></span> : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path fillRule="evenodd" d="M10.5 3.75a6 6 0 0 0-5.98 6.496A5.25 5.25 0 0 0 6.75 20.25H18a4.5 4.5 0 0 0 2.206-8.423 3.75 3.75 0 0 0-4.133-4.303A6.001 6.001 0 0 0 10.5 3.75Zm2.03 5.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 1 0 1.06 1.06l1.72-1.72v4.94a.75.75 0 0 0 1.5 0v-4.94l1.72 1.72a.75.75 0 1 0 1.06-1.06l-3-3Z" clipRule="evenodd" /></svg>
+            )}
             Submit
           </button>
         </div>
@@ -363,39 +440,117 @@ const CodeEditor = () => {
           {/* Testcase / Console Container */}
           <div className="flex flex-col bg-base-100 rounded-lg border border-base-200 overflow-hidden">
             <div className="flex border-b border-base-200 bg-base-200 px-2 pt-2">
-              <button className="px-4 py-2 text-sm font-semibold flex items-center gap-1 bg-base-100 rounded-t-lg text-success">
+              <button
+                onClick={() => setConsoleTab('testcases')}
+                className={`px-4 py-2 text-sm font-semibold flex items-center gap-1 rounded-t-lg transition-colors ${consoleTab === 'testcases' ? 'bg-base-100 text-success' : 'text-base-content/60 hover:text-base-content hover:bg-base-300'}`}
+              >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 Testcase
               </button>
-              <button className="px-4 py-2 text-sm text-base-content/60 hover:text-base-content flex items-center gap-1">
+              <button
+                onClick={() => setConsoleTab('result')}
+                className={`px-4 py-2 text-sm font-semibold flex items-center gap-1 rounded-t-lg transition-colors ${consoleTab === 'result' ? 'bg-base-100 text-success' : 'text-base-content/60 hover:text-base-content hover:bg-base-300'}`}
+              >
                 <span className="text-success font-mono font-bold leading-none align-middle">&rsaquo;_</span>
                 Test Result
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="flex gap-2 mb-4">
-                {problem.visibleTestCases?.map((tc, idx) => (
-                  <button
-                    key={idx}
-                    className={`btn btn-sm ${activeTestCase === idx ? 'bg-base-300 font-normal border-none' : 'btn-ghost font-normal'}`}
-                    onClick={() => setActiveTestCase(idx)}
-                  >
-                    Case {idx + 1}
-                  </button>
-                ))}
-              </div>
 
-              {problem.visibleTestCases && problem.visibleTestCases[activeTestCase] && (
-                <div className="max-w-2xl">
-                  <label className="text-xs font-semibold text-base-content/70 mb-2 block">Input =</label>
-                  <div className="bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
-                    {problem.visibleTestCases[activeTestCase].input}
+              {consoleTab === 'testcases' && (
+                <>
+                  <div className="flex gap-2 mb-4">
+                    {problem.visibleTestCases?.map((tc, idx) => (
+                      <button
+                        key={idx}
+                        className={`btn btn-sm ${activeTestCase === idx ? 'bg-base-300 font-normal border-none' : 'btn-ghost font-normal'}`}
+                        onClick={() => setActiveTestCase(idx)}
+                      >
+                        Case {idx + 1}
+                      </button>
+                    ))}
                   </div>
 
-                  <label className="text-xs font-semibold text-base-content/70 mb-2 block">Expected Output =</label>
-                  <div className="bg-base-200 rounded-md p-3 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
-                    {problem.visibleTestCases[activeTestCase].output}
-                  </div>
+                  {problem.visibleTestCases && problem.visibleTestCases[activeTestCase] && (
+                    <div className="max-w-2xl">
+                      <label className="text-xs font-semibold text-base-content/70 mb-2 block">Input =</label>
+                      <div className="bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                        {problem.visibleTestCases[activeTestCase].input}
+                      </div>
+
+                      <label className="text-xs font-semibold text-base-content/70 mb-2 block">Expected Output =</label>
+                      <div className="bg-base-200 rounded-md p-3 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                        {problem.visibleTestCases[activeTestCase].output}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {consoleTab === 'result' && (
+                <div className="w-full">
+                  {runningCode ? (
+                    <div className="flex flex-col items-center justify-center p-8 gap-4">
+                      <span className="loading loading-spinner text-success loading-md"></span>
+                      <span className="text-base-content/60 font-mono text-sm">Executing Code...</span>
+                    </div>
+                  ) : testResults ? (
+                    <>
+                      <h2 className={`text-xl font-bold mb-4 flex items-center gap-2 ${testResults.every(r => r.status === 'passed') ? 'text-success' : 'text-error'}`}>
+                        {testResults.every(r => r.status === 'passed') ? 'Accepted' : 'Wrong Answer'}
+                      </h2>
+
+                      <div className="flex gap-2 mb-4">
+                        {testResults.map((res, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setActiveTestCase(idx)}
+                            className={`btn btn-sm ${activeTestCase === idx ? 'bg-base-300 border-none outline outline-2 outline-base-content/20' : 'btn-ghost'} ${res.status === 'passed' ? 'text-success' : 'text-error'}`}
+                          >
+                            <span className={`w-2 h-2 rounded-full ${res.status === 'passed' ? 'bg-success' : 'bg-error'} mr-1 inline-block`}></span>
+                            Case {idx + 1}
+                          </button>
+                        ))}
+                      </div>
+
+                      {testResults[activeTestCase] && (
+                        <div className="max-w-2xl">
+                          {testResults[activeTestCase].error && (
+                            <div className="bg-error/10 text-error p-4 rounded-md mb-4 font-mono text-sm whitespace-pre-wrap border border-error/30">
+                              {testResults[activeTestCase].error}
+                            </div>
+                          )}
+
+                          <label className="text-xs font-semibold text-base-content/70 mb-2 block">Input</label>
+                          <div className="bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                            {testResults[activeTestCase].input}
+                          </div>
+
+                          <label className="text-xs font-semibold text-base-content/70 mb-2 block">Output</label>
+                          <div className={`bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border whitespace-pre-wrap ${testResults[activeTestCase].actualOutput === testResults[activeTestCase].expectedOutput ? 'border-base-300/50' : 'border-error/50 bg-error/5'}`}>
+                            <span className={`${testResults[activeTestCase].actualOutput === testResults[activeTestCase].expectedOutput ? 'text-base-content' : 'text-error'}`}>
+                              {testResults[activeTestCase].actualOutput || <span className="opacity-50 italic">No output</span>}
+                            </span>
+                          </div>
+
+                          <label className="text-xs font-semibold text-base-content/70 mb-2 block">Expected</label>
+                          <div className="bg-base-200 rounded-md p-3 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                            {testResults[activeTestCase].expectedOutput}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : runError ? (
+                    <div className="text-error font-mono text-sm p-4 bg-error/10 rounded-lg whitespace-pre-wrap border border-error/20">
+                      <strong>Compile / Runtime Error:</strong>
+                      <br />
+                      {runError}
+                    </div>
+                  ) : (
+                    <div className="text-base-content/50 italic p-6 text-center">
+                      Run your code to see results here.
+                    </div>
+                  )}
                 </div>
               )}
             </div>

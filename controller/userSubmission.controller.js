@@ -134,6 +134,7 @@ const RunCode = async (req, res) => {
     let testCasePassed = 0;
     let isError = false;
     let errorMessage = "";
+    const testResults = [];
 
     for (let i = 0; i < Problem.visibleTestCases.length; i++) {
       const testCase = Problem.visibleTestCases[i];
@@ -150,7 +151,16 @@ const RunCode = async (req, res) => {
           executionResult.message ||
           executionResult.stderr ||
           "Execution Error";
-        break;
+
+        testResults.push({
+          status: "error",
+          input: testCase.input,
+          expectedOutput: testCase.output.trim(),
+          actualOutput:
+            executionResult.stdout ? executionResult.stdout.trim() : "",
+          error: errorMessage,
+        });
+        continue;
       }
 
       const expectedOutput = testCase.output.trim();
@@ -158,8 +168,19 @@ const RunCode = async (req, res) => {
 
       if (expectedOutput === actualOutput) {
         testCasePassed++;
+        testResults.push({
+          status: "passed",
+          input: testCase.input,
+          expectedOutput: expectedOutput,
+          actualOutput: actualOutput,
+        });
       } else {
-        break; // Stop at first wrong answer
+        testResults.push({
+          status: "failed",
+          input: testCase.input,
+          expectedOutput: expectedOutput,
+          actualOutput: actualOutput,
+        });
       }
     }
 
@@ -167,6 +188,8 @@ const RunCode = async (req, res) => {
       succ: true,
       testCasePassed: testCasePassed,
       testCasesTotal: Problem.visibleTestCases.length,
+      testResults: testResults,
+      isError: isError,
       errorMessage: errorMessage,
     });
   } catch (error) {
