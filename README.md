@@ -1,191 +1,222 @@
-<!-- @format -->
-
-`<!-- @format -->
-
 <div align="center">
 
-# 🚀 DCodeX
+# 🚀 DCodeX - Full-Stack Online Judge & Coding Platform
 
-**A High-Performance Full-Stack Online Code Execution & Judging Platform**
-
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](#)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](#)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](#)
-[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](#)
-[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](#)
-[![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)](#)
-[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](#)
-[![WSL](https://img.shields.io/badge/WSL-4D4D4D?style=for-the-badge&logo=linux&logoColor=white)](#)
-
+**A High-Performance System for Competitive Programming and Algorithm Practice**
 </div>
 
-## 📖 Overview
+## 📖 Project Overview
+**DCodeX** is a highly dynamic, full-stack online coding platform heavily inspired by industry-leading systems like LeetCode and HackerRank. It allows developers and students to practice coding problems, run code against custom test cases, and securely submit their solutions for automated evaluation.
 
-**DCodeX** is a robust and scalable full-stack system for an online competitive programming and code judging platform. Built with a modern **MERN** stack (along with Redis and Docker), it seamlessly manages users, coding problems, code submissions, and execution environments utilizing a locally hosted **Piston** engine powered by **Docker** and **WSL**.
+The system is designed to provide an interactive, real-time code execution environment utilizing a secure sandboxed execution engine. It perfectly balances a rich, customizable UI with a robust, scalable backend architecture.
 
-Whether you're building the next LeetCode, HackerRank, or an internal corporate coding assessment tool, DCodeX provides the structural foundation and an intuitive frontend UI you need out-of-the-box.
-
----
-
-## ✨ Features
-
-- 🖥️ **Interactive UI**: Responsive and modern user interface built with React, Vite, Tailwind CSS, and DaisyUI. Maintains global state seamlessly with Redux Toolkit.
-- 🔐 **Secure Authentication & Validation**: Robust user auth using JWT stored in HTTP-only cookies, password hashing with bcrypt, input validation with Zod, and secure logout via Redis token blacklisting.
-- 👨‍💻 **Problem Management & Filtering**: Full CRUD operations for coding problems. Includes dynamic dropdown filtering by **Topic**, **Difficulty**, and **Specific Problem Title**.
-- 📄 **Server-Side Pagination**: Highly optimized problem fetching with server-side pagination (e.g., retrieving 10 problems at a time) to prevent UI lag and minimize database load, even with 100,000+ problems.
-- 📈 **User Progress Tracking**: Real-time stats reflecting the number of problems solved and an interactive navbar showing progress instantly upon login.
-- 🚀 **Local Code Execution**: Integrated with **Piston** running locally in **Docker** via **WSL** for secure, low-latency, and sandboxed code execution across multiple languages.
-- ⚡ **Caching & Rate Limiting**: Intelligent caching and cooldown mechanisms powered by **Redis** to ensure blazing fast response times and prevent API abuse.
-- 📊 **Submissions Tracking**: Keep track of user submissions, verdicts (AC, WA, TLE, etc.), and execution metrics.
-- 🛡️ **Role-Based Access Control (RBAC)**: Distinct permissions for standard users and administrators.
-
----
+## ✨ Features Section
+* **Dynamic Problem Fetching:** Instantly retrieves coding problems, descriptions, and metadata directly from the backend database.
+* **Multi-Language Code Editor:** Integrated Monaco Editor (the core engine behind VS Code) supporting syntax highlighting and autocomplete.
+* **Dynamic Language Switching:** Users can seamlessly toggle between languages (C++, Java, Python, JavaScript) while preserving their boilerplate and active code within a cached state map.
+* **Code Execution System:** Real-time compilation and execution of user code against predefined visible test cases.
+* **Test Case Validation System:** 
+  * Displays dynamic pass/fail indicators.
+  * *Passed test cases* are highlighted in **green**.
+  * *Failed test cases* are highlighted in **red**.
+  * Provides detailed side-by-side comparison of user input, expected output, and actual output.
+* **Submission System:** Tracks successful and rejected submissions. Evaluates code against hidden test cases and dynamically populates the user's submission history with real-time stats (Memory, Runtime, Status).
+* **Editorial & Solution Sections:** Dedicated tabs for users to view official problem editorials and reference solutions.
+* **Dynamic Tabs & Buttons:** Interactive UI allowing toggle between descriptions, testcases, and results without screen freezing.
+* **User Authentication:** Robust JSON Web Token (JWT) system handling user login, registration, and persistent sessions.
+* **Responsive & Resizable UI:** Features a completely draggable and resizable split-pane layout (left/right and top/bottom) mirroring professional IDEs.
+* **Loading & Error Handling:** Beautiful loading spinners and graceful error catchers preventing UI freezes during heavy code execution/compilation.
+* **Secure Code Execution:** Backend strictly validates and routes code to a sandboxed Docker container ensuring the main server is protected from malicious scripts.
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-
-- **Framework**: [React](https://reactjs.org/) with [Vite](https://vitejs.dev/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [DaisyUI](https://daisyui.com/)
-- **State Management**: [Redux Toolkit](https://redux-toolkit.js.org/)
-- **Forms & Validation**: React Hook Form, Zod
-- **API Client**: Axios
+- **React.js (Vite):** Core UI framework optimized for blazing-fast development and rendering.
+- **Tailwind CSS & DaisyUI:** Utility-first framework for sleek, modern, and dark-theme component styling.
+- **Redux / Context API:** Global state management for authentication and user sessions.
+- **Axios:** Streamlined HTTP client for backend network requests.
+- **Monaco Editor / CodeMirror:** High-performance code editor powering the syntax environment.
+- **React Router:** For dynamic single-page application (SPA) navigation.
 
 ### Backend
+- **Node.js:** Server-side javascript runtime.
+- **Express.js:** Lightweight routing and API framework.
+- **MongoDB:** NoSQL database for flexible data modeling and fast retrieval.
+- **Mongoose:** Object Data Modeling (ODM) library for MongoDB.
+- **JWT Authentication:** Secure, stateless authentication system.
 
-- **Runtime**: [Node.js](https://nodejs.org/)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **Database**: [MongoDB](https://www.mongodb.com/) (managed via [Mongoose](https://mongoosejs.com/))
-- **Caching/Queue**: [Redis](https://redis.io/)
-- **Code Execution**: [Piston](https://github.com/engineer-man/piston) (Locally hosted via Docker on WSL)
+### Code Execution
+- **Docker Sandboxing:** Isolates user code execution to prevent unauthorized network or filesystem access.
+- **Judge0 API / Custom Compiler Setup (Piston):** A high-performance remote code execution system designed for safe compilation and execution of untrusted snippets.
 
----
+## 📡 API Documentation
 
-## 📂 Project Structure
+Below is a brief overview of the exposed REST endpoints:
+
+```http
+# Problem Fetching
+GET /api/problems
+GET /api/problems/:id
+
+# Code Execution & Submission
+POST /api/code/run
+POST /api/code/submit
+GET /api/submissions/:problemId
+
+# Authentication (Examples)
+POST /api/user/register
+POST /api/user/login
+```
+
+## 🗄️ Database Schema
+
+### `Users` Collection
+```json
+{
+  "_id": "ObjectId",
+  "username": "coder123",
+  "email": "user@example.com",
+  "password": "hashed_password",
+  "role": "user",
+  "problemsSolved": ["ObjectId1", "ObjectId2"]
+}
+```
+
+### `Problems` Collection
+```json
+{
+  "_id": "ObjectId",
+  "title": "Two Sum",
+  "description": "Given an array of integers return indices of the two numbers...",
+  "difficulty": "easy",
+  "tags": ["Array", "Hash Table"],
+  "startCode": [
+     { "language": "cpp", "initialCode": "int main() { ... }" }
+  ],
+  "visibleTestCases": [{ "input": "2 3", "output": "5" }],
+  "hiddenTestCases": [{ "input": "...", "output": "..." }]
+}
+```
+
+### `Submissions` Collection
+```json
+{
+  "_id": "ObjectId",
+  "userId": "ObjectId",
+  "problemId": "ObjectId",
+  "Code": "int main() { return 0; }",
+  "language": "cpp",
+  "status": "Accepted",
+  "runtime": "12",
+  "memory": "4096",
+  "testCasePassed": 5,
+  "testCasesTotal": 5,
+  "createdAt": "Timestamp"
+}
+```
+
+## 📁 Folder Structure
 
 ```text
 DCodeX/
-├── Frontend/            # React + Vite frontend application (UI, State, Pages)
-├── config/              # Database (MongoDB) and Redis connection setups
-├── controller/          # Core business logic (Users, Problems, Submissions)
-├── middleware/          # Security (Auth, Admin access, Cooldown/Rate Limiting)
-├── model/               # Mongoose database schemas
-├── Routes/              # Express API route definitions
-├── utils/               # Utility functions and input validators
-├── index.js             # Application entry point (Server)
-├── package.json         # Dependency management & scripts
-└── .env                 # Environment variables (not in VCS)
+├── Frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── adminPage/       # Admin specific portals
+│   │   ├── pages/           # CodeEditor, HomePage, Login, Signup
+│   │   ├── utils/           # axiosClient configurations
+│   │   ├── store.js         # Redux Store
+│   │   ├── App.jsx          # Route Definitions
+│   │   └── main.jsx         # React Entry Point
+│   ├── tailwind.config.js   # CSS Styling rules
+│   └── package.json
+│
+├── config/                  # MongoDB & Redis Initialization
+├── controller/              # Auth, Problems, and Submission Logic
+├── middleware/              # JWT Validation and Rate Limiters
+├── model/                   # Mongoose Database Schemas
+├── Routes/                  # REST API Route Declarations
+├── utils/                   # Code Execution Utility Logic
+├── index.js                 # Express Application Entry
+└── package.json
 ```
 
----
+## 🔄 Workflow Explanation
 
-## 🚀 Getting Started
+1. **User opens problem:** The client navigates to the coding workspace via the problem list.
+2. **Data fetched from backend:** The React component fetches problem details, testcases, and editorial configurations.
+3. **User selects language:** A dynamic dropdown enables selecting Java, Python, C++, or JavaScript.
+4. **Boilerplate loads dynamically:** Based on the choice, the specific starter skeleton code injects into the Monaco Editor.
+5. **User writes code:** Features like syntax highlighting and formatting support development.
+6. **Code runs against test cases:** The 'Run' button sends code securely to the backend execution module.
+7. **Passed test case → green:** Verified exact matches render a green success check.
+8. **Failed test case → red:** Discrepancies generate localized red failure blocks paired with exact diff displays.
+9. **User submits code:** Submissions process against a larger set of hidden testcases.
+10. **Submission stored in database:** A comprehensive entry mapping execution runtime, compilation status, and memory is saved for the user's historical portfolio.
 
-### Prerequisites
+## 🎨 UI Features
+* **Dynamic Tabs:** Click effortlessly between Problem Description, Editorials, Solutions, and Submissions.
+* **Resizable Panels:** Draggable horizontal and vertical layout splitters.
+* **Draggable Layout:** Workspace blocks completely resize like standard coding IDEs.
+* **Responsive Design:** Fluid height matching and overflow containment preventing screen clipping.
+* **Theme Support:** Tailwind Dark-mode integrations applied globally ensuring an immersive, eye-friendly layout.
 
-Ensure you have the following installed on your local machine:
+## 🛡️ Security Features
+* **Sandboxed execution:** Untrusted code compiles inside isolated Docker instances.
+* **Memory limits:** Processes killed automatically if RAM spikes unacceptably.
+* **Timeout handling:** Infinite loops (`while(true)`) are terminated automatically to prevent resource strangulation.
+* **Protected APIs:** Only valid JWT holders can submit solutions or fetch secure payloads. Admin checks apply for problem manipulation.
+* **JWT auth:** Handled purely via HttpOnly server cookies (invulnerable to cross-site scripting/XSS).
 
-- Node.js (v18 or higher)
-- MongoDB (local or Atlas)
-- Redis server (local or cloud)
-- **Docker Desktop** (with WSL2 integration enabled in Windows)
-- **Piston API** (Run locally via Docker container)
+## 🚀 Installation Guide
 
-### Installation
+### 1. Backend Setup
 
-1. **Clone the repository**
+```bash
+# Clone the repository
+git clone <your-repo-link>
+cd DCodeX
 
-   ```bash
-   git clone https://github.com/yourusername/dcodex.git
-   cd dcodex
-   ```
+# Install Node dependencies
+npm install
 
-2. **Install Backend dependencies**
+# Start the execution engine (Docker Required)
+docker run -d -p 2000:2000 ghcr.io/engineer-man/piston
 
-   ```bash
-   npm install
-   ```
+# Launch the Application Server
+npm run dev
+```
 
-3. **Install Frontend dependencies**
+### 2. Frontend Setup
 
-   ```bash
-   cd Frontend
-   npm install
-   cd ..
-   ```
+Open a new terminal window:
 
-4. **Start the local Piston Code Execution engine in Docker/WSL**
+```bash
+# Navigate to Frontend module
+cd DCodeX/Frontend
 
-   ```bash
-   docker run -d -p 2000:2000 ghcr.io/engineer-man/piston
-   ```
+# Install React dependencies
+npm install
 
-5. **Environment Setup (Backend)**
-   Create a `.env` file in the root directory and configure the following variables:
+# Start the Vite Development Server
+npm run dev
+```
 
-   ```env
-   PORT=3000
-   MONGO_URI=mongodb://localhost:27017/dcodex
-   REDIS_URL=redis://localhost:6379
-   JWT_KEY=your_super_secret_jwt_key
-   PISTON_URL=http://127.0.0.1:2000
-   ```
+## 🔑 Environment Variables
 
-6. **Start the Application**
+Create a `.env` file in the root `DCodeX/` directory:
 
-   **Terminal 1 (Backend):**
+```env
+MONGO_URI=mongodb://127.0.0.1:27017/dcodex
+JWT_SECRET=your_super_secret_jwt_key
+PORT=4000
+PISTON_URL=http://127.0.0.1:2000
+```
 
-   ```bash
-   npm start
-   # or node index.js
-   ```
-
-   **Terminal 2 (Frontend):**
-
-   ```bash
-   cd Frontend
-   npm run dev
-   ```
-
-   The frontend will be running on `http://localhost:5173` and the backend on `http://localhost:3000`.
-
----
-
-## 🔌 Core API Routes
-
-- **User Authentication (`/user`)**
-  - `POST /register` - Register a new user
-  - `POST /login` - Login to the platform
-  - `POST /logout` - Securely logout (Redis token blacklisting)
-  - `GET /check` - Verify Auth status
-
-- **Problems (`/problem`)**
-  - `GET /getAllProblem` - Fetch all problems
-  - `GET /problemById/:id` - Get details of a specific problem
-  - `POST /create` - Add a new problem (Admin only)
-
-- **Submissions (`/submit`)**
-  - `POST /:pid` - Submit code for a problem
-
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-Feel free to check the [issues page](#) if you want to contribute.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📜 License
-
-Distributed under the ISC License. See `LICENSE` for more information.
-
-<div align="center">
-  <i>Built with ❤️ by an awesome developer.</i>
-</div>
+## 🎯 Future Improvements
+* **Contest System:** Time-bound competitive arenas for ranking.
+* **AI Code Review:** Automated chatbot highlighting algorithm inefficiencies.
+* **Leaderboard:** Global ranking metrics based on total AC solutions.
+* **Discussion Section:** A user-to-user forum under each problem.
+* **Real-time Collaboration:** Multiplayer websocket code syncing.
+* **Plagiarism Detection:** AST-based code comparison to reject copied logic.

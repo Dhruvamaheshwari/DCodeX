@@ -34,6 +34,7 @@ const CodeEditor = () => {
   const [testResults, setTestResults] = useState(null);
   const [runError, setRunError] = useState(null);
   const [submitResult, setSubmitResult] = useState(null);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
 
   // Map language_id from backend to standard language names used by Monaco editor
   const getMonacoLanguage = (langId) => {
@@ -152,7 +153,10 @@ const CodeEditor = () => {
     if (!code.trim()) return;
     try {
       setSubmittingCode(true);
-      setActiveTab('submissions'); // auto-switch to submissions tab
+      setConsoleTab('result'); // Switch to test results right panel
+      setTestResults(null);
+      setRunError(null);
+      setSubmitResult(null);
 
       const res = await axiosClient.post(`/submission/submit/${problemId}`, {
         Code: code,
@@ -167,12 +171,23 @@ const CodeEditor = () => {
           setSubmissions(Array.isArray(subRes.data.mess) ? subRes.data.mess : []);
         }
       } else {
-        // handle submission failure gracefully if needed
+        setRunError(res.data.mess || 'Failed to submit code');
       }
     } catch (err) {
       console.error(err);
+      setRunError(err.response?.data?.mess || err.message || 'An error occurred during submission.');
     } finally {
       setSubmittingCode(false);
+    }
+  };
+
+  const handleViewMySolution = () => {
+    setActiveTab('submissions');
+    if (submitResult?.submissionId) {
+      const newSub = submissions.find(s => s._id === submitResult.submissionId);
+      if (newSub) {
+        setSelectedSubmission(newSub);
+      }
     }
   };
 
@@ -263,7 +278,7 @@ const CodeEditor = () => {
             </button>
             <button
               className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors ${activeTab === 'submissions' ? 'bg-base-100 text-primary' : 'text-base-content/60 hover:text-base-content hover:bg-base-300'}`}
-              onClick={() => setActiveTab('submissions')}
+              onClick={() => { setActiveTab('submissions'); setSelectedSubmission(null); }}
             >
               Submissions
             </button>
@@ -339,48 +354,117 @@ const CodeEditor = () => {
             {/* Submissions Tab */}
             {activeTab === 'submissions' && (
               <div className="text-sm">
-                <h2 className="text-xl font-bold mb-4 text-base-content flex items-center justify-between">
-                  Your Submissions
-                  <span className="badge badge-info badge-outline">{submissions.length} Total</span>
-                </h2>
+                {selectedSubmission ? (
+                  <div>
+                    <button
+                      className="btn btn-sm btn-ghost mb-4 pl-0"
+                      onClick={() => setSelectedSubmission(null)}
+                    >
+                      ← Back to Submissions
+                    </button>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <h2 className={`text-2xl font-bold ${selectedSubmission.status === 'accepted' ? 'text-success' : selectedSubmission.status === 'pending' ? 'text-warning' : 'text-error'}`}>
+                          {selectedSubmission.status.charAt(0).toUpperCase() + selectedSubmission.status.slice(1)}
+                        </h2>
+                        {selectedSubmission.createdAt && (
+                          <span className="text-base-content/60 text-xs">
+                            Submitted on {new Date(selectedSubmission.createdAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
 
-                {loadingSubmissions ? (
-                  <div className="flex justify-center p-10"><span className="loading loading-spinner text-primary"></span></div>
-                ) : submissions.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="table table-zebra table-sm w-full font-mono">
-                      <thead className="bg-base-200">
-                        <tr>
-                          <th>Status</th>
-                          <th>Language</th>
-                          <th>Runtime</th>
-                          <th>Memory</th>
-                          <th>Tests Passed</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {submissions.map((sub, i) => (
-                          <tr key={i} className="hover">
-                            <td>
-                              <span className={`font-semibold ${sub.status === 'accepted' ? 'text-success' :
-                                sub.status === 'pending' ? 'text-warning' : 'text-error'
-                                }`}>
-                                {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
-                              </span>
-                            </td>
-                            <td>{sub.language}</td>
-                            <td>{sub.runtime} ms</td>
-                            <td>{sub.memory} KB</td>
-                            <td>{sub.testCasePassed} / {sub.testCasesTotal}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                      <div className="flex gap-4 mb-2">
+                        <div className="flex flex-col">
+                          <span className="text-base-content/60 text-xs">Language</span>
+                          <span className="font-semibold capitalize">{selectedSubmission.language}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-base-content/60 text-xs">Runtime</span>
+                          <span className="font-semibold">{selectedSubmission.runtime} ms</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-base-content/60 text-xs">Memory</span>
+                          <span className="font-semibold">{selectedSubmission.memory} KB</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-base-content/60 text-xs">Test Cases</span>
+                          <span className="font-semibold">{selectedSubmission.testCasePassed} / {selectedSubmission.testCasesTotal}</span>
+                        </div>
+                      </div>
+
+                      {selectedSubmission.errorMessage && (
+                        <div className="bg-error/10 text-error p-4 rounded-md font-mono text-xs whitespace-pre-wrap border border-error/30">
+                          <strong>Error:</strong>
+                          <br />
+                          {selectedSubmission.errorMessage}
+                        </div>
+                      )}
+
+                      <div>
+                        <h3 className="text-lg font-bold mb-2 text-base-content">Submitted Code</h3>
+                        <div className="rounded-md overflow-hidden border border-base-300 h-96">
+                          <Editor
+                            theme="vs-dark"
+                            language={selectedSubmission.language === 'javascript' ? 'javascript' : selectedSubmission.language}
+                            value={selectedSubmission.Code}
+                            options={{
+                              readOnly: true,
+                              minimap: { enabled: false },
+                              fontSize: 14,
+                              scrollBeyondLastLine: false,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-base-content/60 italic bg-base-200/50 p-6 rounded-lg text-center border border-base-300">
-                    You haven't submitted any code for this problem yet. Write your code and click Submit!
-                  </p>
+                  <>
+                    <h2 className="text-xl font-bold mb-4 text-base-content flex items-center justify-between">
+                      Your Submissions
+                      <span className="badge badge-info badge-outline">{submissions.length} Total</span>
+                    </h2>
+
+                    {loadingSubmissions ? (
+                      <div className="flex justify-center p-10"><span className="loading loading-spinner text-primary"></span></div>
+                    ) : submissions.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="table table-zebra table-sm w-full font-mono cursor-pointer">
+                          <thead className="bg-base-200">
+                            <tr>
+                              <th>Status</th>
+                              <th>Language</th>
+                              <th>Runtime</th>
+                              <th>Memory</th>
+                              <th>Tests Passed</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {submissions.map((sub, i) => (
+                              <tr key={i} className="hover" onClick={() => setSelectedSubmission(sub)}>
+                                <td>
+                                  <span className={`font-semibold ${sub.status === 'accepted' ? 'text-success' :
+                                    sub.status === 'pending' ? 'text-warning' : 'text-error'
+                                    }`}>
+                                    {sub.status.charAt(0).toUpperCase() + sub.status.slice(1)}
+                                  </span>
+                                </td>
+                                <td>{sub.language}</td>
+                                <td>{sub.runtime} ms</td>
+                                <td>{sub.memory} KB</td>
+                                <td>{sub.testCasePassed} / {sub.testCasesTotal}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-base-content/60 italic bg-base-200/50 p-6 rounded-lg text-center border border-base-300">
+                        You haven't submitted any code for this problem yet. Write your code and click Submit!
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -489,10 +573,34 @@ const CodeEditor = () => {
 
               {consoleTab === 'result' && (
                 <div className="w-full">
-                  {runningCode ? (
+                  {runningCode || submittingCode ? (
                     <div className="flex flex-col items-center justify-center p-8 gap-4">
                       <span className="loading loading-spinner text-success loading-md"></span>
-                      <span className="text-base-content/60 font-mono text-sm">Executing Code...</span>
+                      <span className="text-base-content/60 font-mono text-sm">{runningCode ? 'Executing' : 'Submitting'} Code...</span>
+                    </div>
+                  ) : submitResult ? (
+                    <div className="flex flex-col gap-4">
+                      <h2 className={`text-xl font-bold flex items-center gap-2 ${submitResult.status === 'accepted' ? 'text-success' : 'text-error'}`}>
+                        {submitResult.status.charAt(0).toUpperCase() + submitResult.status.slice(1)}
+                      </h2>
+                      <div className="flex gap-4 mb-2">
+                        <div className="flex flex-col">
+                          <span className="text-base-content/60 text-xs">Test Cases</span>
+                          <span className="font-semibold">{submitResult.testCasePassed} / {submitResult.testCasesTotal}</span>
+                        </div>
+                      </div>
+
+                      {submitResult.errorMessage && (
+                        <div className="bg-error/10 text-error p-4 rounded-md font-mono text-xs whitespace-pre-wrap border border-error/30">
+                          <strong>Error:</strong>
+                          <br />
+                          {submitResult.errorMessage}
+                        </div>
+                      )}
+
+                      <button className="btn btn-primary mt-2 flex w-fit" onClick={handleViewMySolution}>
+                        View My Solution
+                      </button>
                     </div>
                   ) : testResults ? (
                     <>

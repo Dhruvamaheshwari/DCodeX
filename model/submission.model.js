@@ -1,59 +1,64 @@
-const {Schema , model} = require('mongoose')
+/** @format */
+
+const { Schema, model } = require("mongoose");
 
 // create the new Schema
 
-const submissionSchema = new Schema({
+const submissionSchema = new Schema(
+  {
     userId: {
-        type: Schema.Types.ObjectId,
-        ref:"user",
-        required:true
+      type: Schema.Types.ObjectId,
+      ref: "user",
+      required: true,
     },
     problemId: {
-        type: Schema.Types.ObjectId,
-        ref:'problem',
-        required:true
+      type: Schema.Types.ObjectId,
+      ref: "problem",
+      required: true,
     },
     Code: {
-        type:String,
-        required:true,
-     },
-    language:{
-        type:String,
-        required:true,
-        enum:['javascript','cpp','java']
+      type: String,
+      required: true,
+    },
+    language: {
+      type: String,
+      required: true,
+      enum: ["javascript", "cpp", "java"],
     },
     status: {
-        type:String,
-        enum:['pending','accepted','wrong','error'],
-        default:'pending',
+      type: String,
+      enum: ["pending", "accepted", "wrong", "error"],
+      default: "pending",
     },
     runtime: {
-        type:Number, // millisecond
-        default:0
+      type: Number, // millisecond
+      default: 0,
     },
-    memory:{
-        type:Number, // kB
-        default:0,
+    memory: {
+      type: Number, // kB
+      default: 0,
     },
     errorMessage: {
-        type:String,
-        default:''
+      type: String,
+      default: "",
     },
-    testCasePassed:{
-        type:Number,
-        default:0
+    testCasePassed: {
+      type: Number,
+      default: 0,
     },
-    testCasesTotal:{
-        type:Number,
-        default:0
-    }
-},{timestamp:true})
+    testCasesTotal: {
+      type: Number,
+      default: 0,
+    },
+  },
+  { timestamps: true },
+);
 
-// create the index for the submission for find the solved problem 
+// create the index for the submission for find the solved problem
 // 1 => assinding order and -1 => descending order
-submissionSchema.index({userId:1 , problemId:1}) // inn dono ki help se compound index create ho gay h;
+submissionSchema.index({ userId: 1, problemId: 1 }); // inn dono ki help se compound index create ho gay h;
 
 // create the model
-const submission = model("submission" ,submissionSchema);
+const submission = model("submission", submissionSchema);
 
-module.exports = submission
+module.exports = submission;
