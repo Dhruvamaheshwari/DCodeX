@@ -93,6 +93,15 @@ const CodeEditor = () => {
             });
           }
 
+          // Load auto-saved code from local storage
+          const languages = ['cpp', 'java', 'python', 'javascript'];
+          languages.forEach((lang) => {
+            const savedCode = localStorage.getItem(`DCodeX_Code_${problemId}_${lang}`);
+            if (savedCode) {
+              initialCodeMap[lang] = savedCode;
+            }
+          });
+
           setCodeMap(initialCodeMap);
           setCode(initialCodeMap[language]); // Set code for default selected language
         } else {
@@ -118,6 +127,34 @@ const CodeEditor = () => {
   const handleCodeChange = (newCode) => {
     setCode(newCode);
     setCodeMap(prev => ({ ...prev, [language]: newCode }));
+    // Auto Save Code to Local Storage
+    localStorage.setItem(`DCodeX_Code_${problemId}_${language}`, newCode);
+  };
+
+  const clearEditor = () => {
+    // Reset to start code or empty snippet based on the current problem data
+    let originalCode = '';
+    if (problem && problem.startCode) {
+      const startCodeObj = problem.startCode.find(
+        (sc) => getMonacoLanguage(sc.language_id) === language || sc.language === language
+      );
+      if (startCodeObj) {
+        originalCode = startCodeObj.initialCode;
+      }
+    }
+    if (!originalCode) {
+      const fallbackSnippets = {
+        cpp: '// Write your C++ code here',
+        java: '// Write your Java code here',
+        python: '# Write your Python code here',
+        javascript: '// Write your JavaScript code here',
+      };
+      originalCode = fallbackSnippets[language] || '';
+    }
+
+    setCode(originalCode);
+    setCodeMap((prev) => ({ ...prev, [language]: originalCode }));
+    localStorage.removeItem(`DCodeX_Code_${problemId}_${language}`);
   };
 
   const handleRunCode = async () => {
@@ -214,7 +251,7 @@ const CodeEditor = () => {
       <div className="h-14 bg-base-200 flex items-center justify-between px-4 border-b border-base-300">
         <div className="flex items-center gap-4">
           <button
-            className="btn btn-ghost btn-sm"
+            className="btn btn-ghost btn-sm transition-transform hover:-translate-x-1"
             onClick={() => navigate('/')}
           >
             ← Problem List
@@ -222,7 +259,17 @@ const CodeEditor = () => {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="btn btn-sm btn-ghost text-success"
+            className="btn btn-sm btn-outline btn-error transition-all hover:scale-105 active:scale-95"
+            onClick={clearEditor}
+            title="Reset code to default"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            Reset
+          </button>
+          <button
+            className="btn btn-sm btn-ghost text-success transition-all hover:bg-success/10 hover:scale-105 active:scale-95"
             onClick={handleRunCode}
             disabled={runningCode || submittingCode}
           >
@@ -232,7 +279,7 @@ const CodeEditor = () => {
             Run
           </button>
           <button
-            className="btn btn-sm btn-success text-success-content flex items-center gap-1"
+            className="btn btn-sm btn-success text-success-content flex items-center gap-1 transition-all hover:shadow-lg hover:shadow-success/30 hover:scale-105 active:scale-95 rounded-md"
             onClick={handleSubmitCode}
             disabled={runningCode || submittingCode}
           >
@@ -543,11 +590,14 @@ const CodeEditor = () => {
 
               {consoleTab === 'testcases' && (
                 <>
-                  <div className="flex gap-2 mb-4">
+                  <div className="flex gap-2 mb-4 p-1 bg-base-200/50 rounded-lg w-fit transition-all duration-300">
                     {problem.visibleTestCases?.map((tc, idx) => (
                       <button
                         key={idx}
-                        className={`btn btn-sm ${activeTestCase === idx ? 'bg-base-300 font-normal border-none' : 'btn-ghost font-normal'}`}
+                        className={`btn btn-sm rounded-md transition-all duration-300 ease-in-out ${activeTestCase === idx
+                            ? 'bg-base-100 shadow-sm border-base-300 text-primary font-bold scale-105'
+                            : 'btn-ghost font-normal text-base-content/70 hover:bg-base-300'
+                          }`}
                         onClick={() => setActiveTestCase(idx)}
                       >
                         Case {idx + 1}
@@ -556,14 +606,14 @@ const CodeEditor = () => {
                   </div>
 
                   {problem.visibleTestCases && problem.visibleTestCases[activeTestCase] && (
-                    <div className="max-w-2xl">
+                    <div className="max-w-2xl translate-x-0 opacity-100 transition-all duration-300 animate-in fade-in slide-in-from-right-4">
                       <label className="text-xs font-semibold text-base-content/70 mb-2 block">Input =</label>
-                      <div className="bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                      <div className="bg-base-200 rounded-md p-3 mb-4 font-mono text-sm border border-base-300/50 whitespace-pre-wrap transition-colors hover:border-primary/30">
                         {problem.visibleTestCases[activeTestCase].input}
                       </div>
 
                       <label className="text-xs font-semibold text-base-content/70 mb-2 block">Expected Output =</label>
-                      <div className="bg-base-200 rounded-md p-3 font-mono text-sm border border-base-300/50 whitespace-pre-wrap">
+                      <div className="bg-base-200 rounded-md p-3 font-mono text-sm border border-base-300/50 whitespace-pre-wrap transition-colors hover:border-primary/30">
                         {problem.visibleTestCases[activeTestCase].output}
                       </div>
                     </div>
