@@ -4,17 +4,22 @@ import axiosClient from "../utils/axiosClient";
 const DeleteProblem = () => {
 
     const [problems, setProblems] = useState([]);
+    const [loading , setLoading] = useState(false);
 
     // Fetch all problems for the dropdown
     useEffect(() => {
         const fetchProblems = async () => {
             try {
+                setLoading(true);
                 const res = await axiosClient.get("/problem/getAllProblem/", { params: { limit: 1000 } });
                 if (res.data.success) {
                     setProblems(res.data.problems);
                 }
             } catch (err) {
                 console.error("Error fetching problems:", err);
+            }
+            finally{
+                setLoading(false);
             }
         };
         fetchProblems();
@@ -37,6 +42,14 @@ const DeleteProblem = () => {
         }
     };
 
+    if(loading)
+    {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <span className="loading loading-spinner loading-lg"></span>
+            </div>
+        )
+    }
     return (
         <div className="bg-base-100 p-8 rounded-xl shadow-lg border border-base-300">
             <h2 className="text-2xl font-bold mb-6 text-error">Delete Problem</h2>

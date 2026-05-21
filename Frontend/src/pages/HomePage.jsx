@@ -97,6 +97,11 @@ const HomePage = () => {
                   <span className="text-primary font-bold">Solved Problems: {solvedCount}</span>
                 </li>
                 <li>
+                  <button onClick={() => navigate('/profile')} className="font-semibold hover:bg-base-200">
+                    My Profile
+                  </button>
+                </li>
+                <li>
                   <button onClick={handleLogout} className="text-error font-semibold hover:bg-error/10">
                     Logout
                   </button>
