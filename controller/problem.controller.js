@@ -3,6 +3,8 @@
 const {
   getPistonLanguage,
   executeInPiston,
+  getFilename,
+  getUserFilename,
 } = require("../utils/ProblemUtility");
 const problem = require("../model/problem.model.js");
 const User = require("../model/user.model.js");
@@ -13,14 +15,32 @@ const validateReferenceSolution = async (
   language,
   visibleTestCases,
   hiddenTestCases,
+  driverCodeArray,
 ) => {
   const allTestCases = [...visibleTestCases, ...hiddenTestCases];
+
+  let filesArray = null;
+  if (driverCodeArray && driverCodeArray.length > 0) {
+    const driverObj = driverCodeArray.find(
+      (d) =>
+        String(d.language_id) === String(language) ||
+        getPistonLanguage(d.language_id) === language,
+    );
+    if (driverObj) {
+      filesArray = [
+        { name: getFilename(language), content: driverObj.code },
+        { name: getUserFilename(language), content: completeCode },
+      ];
+    }
+  }
+
   for (let i = 0; i < allTestCases.length; i++) {
     const testCase = allTestCases[i];
     const result = await executeInPiston(
       completeCode,
       language,
       testCase.input,
+      filesArray,
     );
 
     // Any error (compilation, runtime, missing language) -> fail
@@ -57,6 +77,7 @@ const createProblem = async (req, res) => {
     hiddenTestCases,
     startCode,
     referenceSolution,
+    driverCode,
   } = req.body;
 
   // Basic validation
@@ -91,6 +112,7 @@ const createProblem = async (req, res) => {
         parsedLanguage,
         visibleTestCases || [],
         hiddenTestCases || [],
+        driverCode || [],
       );
 
       if (!validation.passed) {
@@ -120,7 +142,8 @@ const createProblem = async (req, res) => {
 // ================= UPDATE PROBLEM =================
 const updateProblem = async (req, res) => {
   const { id } = req.params;
-  const { visibleTestCases, hiddenTestCases, referenceSolution } = req.body;
+  const { visibleTestCases, hiddenTestCases, referenceSolution, driverCode } =
+    req.body;
 
   if (!id) {
     return res.status(400).json({ message: "Missing problem ID" });
@@ -136,6 +159,7 @@ const updateProblem = async (req, res) => {
     if (referenceSolution && referenceSolution.length > 0) {
       const visible = visibleTestCases || existingProblem.visibleTestCases;
       const hidden = hiddenTestCases || existingProblem.hiddenTestCases;
+      const drivers = driverCode || existingProblem.driverCode || [];
 
       for (const sol of referenceSolution) {
         const { completeCode } = sol;
@@ -159,6 +183,7 @@ const updateProblem = async (req, res) => {
           parsedLanguage,
           visible,
           hidden,
+          drivers,
         );
         if (!validation.passed) {
           return res.status(400).json({

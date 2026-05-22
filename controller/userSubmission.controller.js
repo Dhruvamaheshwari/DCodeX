@@ -162,6 +162,7 @@ const RunCode = async (req, res) => {
         mainCode = driverObj.code;
       }
     }
+    
 
     // pisto ko code submit krna h;
     const langForPiston = getPistonLanguage(language); // to find the lan. id
@@ -172,6 +173,8 @@ const RunCode = async (req, res) => {
         { name: getUserFilename(langForPiston), content: Code },
       ];
     }
+
+    console.log(Code);
 
     let testCasePassed = 0;
     let isError = false;

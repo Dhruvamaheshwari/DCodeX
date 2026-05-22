@@ -12,7 +12,8 @@ const codeSchema = z.object({
     language_id: z.coerce.number().min(1, "Language ID is required"),
     language: z.string().optional(),
     initialCode: z.string().optional(),
-    completeCode: z.string().optional()
+    completeCode: z.string().optional(),
+    code: z.string().optional()
 });
 
 const problemSchema = z.object({
@@ -24,6 +25,7 @@ const problemSchema = z.object({
     hiddenTestCases: z.array(testCaseSchema).min(1, "At least one hidden test case is required"),
     startCode: z.array(codeSchema).min(1, "At least one start code template is required"),
     referenceSolution: z.array(codeSchema).min(1, "At least one reference solution is required"),
+    driverCode: z.array(codeSchema).optional(),
 });
 
 const CreateProblem = () => {
@@ -37,6 +39,7 @@ const CreateProblem = () => {
         hiddenTestCases: [{ input: "", output: "", explanation: "" }],
         startCode: [{ language_id: 54, initialCode: "" }],
         referenceSolution: [{ language_id: 54, completeCode: "" }],
+        driverCode: [{ language_id: 54, code: "" }],
     });
 
     const handleChange = (e) => {
@@ -80,7 +83,12 @@ const CreateProblem = () => {
                     ...tc,
                     language_id: Number(tc.language_id),
                     language: getLangName(tc.language_id)
-                }))
+                })),
+                driverCode: formData.driverCode ? formData.driverCode.map(tc => ({
+                    ...tc,
+                    language_id: Number(tc.language_id),
+                    language: getLangName(tc.language_id)
+                })) : []
             };
 
             const parsedData = problemSchema.parse(payload);
@@ -98,6 +106,7 @@ const CreateProblem = () => {
                 hiddenTestCases: [{ input: "", output: "", explanation: "" }],
                 startCode: [{ language_id: 54, initialCode: "" }],
                 referenceSolution: [{ language_id: 54, completeCode: "" }],
+                driverCode: [{ language_id: 54, code: "" }],
             });
         } catch (error) {
             if (error instanceof z.ZodError) {
@@ -221,6 +230,25 @@ const CreateProblem = () => {
                                 </select>
                             </div>
                             <div><label className="label"><span className="label-text">Complete Code</span></label><textarea value={tc.completeCode} onChange={(e) => handleArrayChange(e, index, "referenceSolution", "completeCode")} className="textarea textarea-bordered w-full font-mono text-sm h-32" required></textarea></div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="space-y-4">
+                    <h3 className="text-xl font-semibold border-b pb-2 flex justify-between items-center">
+                        Driver Code (Hidden Runner)
+                        <button type="button" onClick={() => addArrayItem("driverCode", { language_id: 54, code: "" })} className="btn btn-sm btn-primary">Add</button>
+                    </h3>
+                    {formData.driverCode?.map((tc, index) => (
+                        <div key={index} className="p-4 border rounded relative bg-base-200">
+                            <button type="button" onClick={() => removeArrayItem(index, "driverCode")} className="btn btn-sm btn-circle btn-error absolute top-2 right-2">✕</button>
+                            <div className="mb-2 w-1/2 pr-2">
+                                <label className="label"><span className="label-text">Language</span></label>
+                                <select value={tc.language_id} onChange={(e) => handleArrayChange(e, index, "driverCode", "language_id")} className="select select-bordered w-full" required>
+                                    <option value="54">C++</option><option value="62">Java</option><option value="71">Python</option><option value="63">JavaScript</option>
+                                </select>
+                            </div>
+                            <div><label className="label"><span className="label-text">Code</span></label><textarea value={tc.code} onChange={(e) => handleArrayChange(e, index, "driverCode", "code")} className="textarea textarea-bordered w-full font-mono text-sm h-32"></textarea></div>
                         </div>
                     ))}
                 </div>
