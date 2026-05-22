@@ -28,7 +28,9 @@ const getPistonLanguage = (lan) => {
 // Fetch available runtimes (with caching)
 const fetchRuntimes = async () => {
   if (runtimesCache && Date.now() < cacheExpiry) return runtimesCache;
-  const response = await axios.get("http://localhost:2000/api/v2/runtimes", { timeout: 5000 });
+  const response = await axios.get("http://localhost:2000/api/v2/runtimes", {
+    timeout: 5000,
+  });
   runtimesCache = response.data;
   cacheExpiry = Date.now() + CACHE_TTL;
   return runtimesCache;
@@ -37,23 +39,49 @@ const fetchRuntimes = async () => {
 // Get version for a language
 const getVersionForLanguage = async (language) => {
   const runtimes = await fetchRuntimes();
-  const runtime = runtimes.find(r => r.language === language);
+  const runtime = runtimes.find((r) => r.language === language);
   return runtime ? runtime.version : null;
 };
 
 // Get proper filename for Piston
 const getFilename = (language) => {
   switch (language) {
-    case "c++": return "main.cpp";
-    case "java": return "Main.java";
-    case "javascript": return "main.js";
-    case "python": return "main.py";
-    default: return "code.txt";
+    case "c++":
+      return "main.cpp";
+    case "java":
+      return "Main.java";
+    case "javascript":
+      return "main.js";
+    case "python":
+      return "main.py";
+    default:
+      return "code.txt";
+  }
+};
+
+// Get proper user code filename for multi-file imports
+const getUserFilename = (language) => {
+  switch (language) {
+    case "c++":
+      return "solution.cpp";
+    case "java":
+      return "Solution.java";
+    case "javascript":
+      return "solution.js";
+    case "python":
+      return "solution.py";
+    default:
+      return "code.txt";
   }
 };
 
 // Execute code in Piston – FIXED VERSION
-const executeInPiston = async (source_code, language, stdin = "") => {
+const executeInPiston = async (
+  source_code,
+  language,
+  stdin = "",
+  filesArray = null,
+) => {
   try {
     // 1. Get correct version (no "*" wildcard)
     const version = await getVersionForLanguage(language);
@@ -75,10 +103,13 @@ const executeInPiston = async (source_code, language, stdin = "") => {
       {
         language: language,
         version: version,
-        files: [{ name: filename, content: source_code || "" }],
+        files:
+          filesArray ? filesArray : (
+            [{ name: filename, content: source_code || "" }]
+          ),
         stdin: stdin || "",
       },
-      { headers: { "Content-Type": "application/json" }, timeout: 10000 }
+      { headers: { "Content-Type": "application/json" }, timeout: 10000 },
     );
     const data = response.data;
 
@@ -88,7 +119,8 @@ const executeInPiston = async (source_code, language, stdin = "") => {
         error: true,
         status: "Compilation Error",
         stdout: "",
-        stderr: data.compile.stderr || data.compile.output || "Compilation failed",
+        stderr:
+          data.compile.stderr || data.compile.output || "Compilation failed",
         compile_output: data.compile.output,
         message: data.compile.stderr || data.compile.output,
       };
@@ -115,14 +147,25 @@ const executeInPiston = async (source_code, language, stdin = "") => {
       message: data.run?.output || "",
     };
   } catch (error) {
-    console.error("Piston Execution Error:", error.response?.data || error.message);
+    console.error(
+      "Piston Execution Error:",
+      error.response?.data || error.message,
+    );
     return {
       error: true,
-      message: error.response?.data?.message || error.message || "Unknown Piston error",
+      message:
+        error.response?.data?.message ||
+        error.message ||
+        "Unknown Piston error",
       stdout: "",
       stderr: "",
     };
   }
 };
 
-module.exports = { getPistonLanguage, executeInPiston };
+module.exports = {
+  getPistonLanguage,
+  executeInPiston,
+  getFilename,
+  getUserFilename,
+};

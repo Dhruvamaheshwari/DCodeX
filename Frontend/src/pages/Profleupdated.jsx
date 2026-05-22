@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axiosClient from '../utils/axiosClient';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
@@ -56,7 +56,8 @@ const Profleupdated = () => {
     const generateHeatmap = () => {
         // Generate dates for the past year
         const today = new Date();
-        const startDate = new Date(new Date().setFullYear(today.getFullYear() - 1));
+        const startDate = new Date();
+        startDate.setFullYear(today.getFullYear() - 1);
 
         return (
             <div className="bg-base-200 p-6 rounded-xl shadow-inner border border-base-300 w-full overflow-x-auto">
@@ -70,6 +71,7 @@ const Profleupdated = () => {
 
                 <div className="min-w-[700px]">
                     <CalendarHeatmap
+                        gutterSize={3}
                         startDate={startDate}
                         endDate={today}
                         values={profile?.heatmapData || []}
@@ -89,7 +91,7 @@ const Profleupdated = () => {
                                 'data-tooltip-content': `${value.count} submissions on ${value.date}`,
                             };
                         }}
-                        showWeekdayLabels={true}
+                        showMonthLabels={true}
                     />
                 </div>
                 <Tooltip id="heatmap-tooltip" />

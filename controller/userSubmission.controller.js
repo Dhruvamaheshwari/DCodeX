@@ -5,6 +5,8 @@ const submission = require("../model/submission.model");
 const {
   getPistonLanguage,
   executeInPiston,
+  getFilename,
+  getUserFilename,
 } = require("../utils/ProblemUtility");
 
 // ==================== Submit the Code ============================
@@ -25,6 +27,27 @@ const submitCode = async (req, res) => {
       return res.status(404).json({ succ: false, mess: "Problem not found" });
     }
 
+    // Prepare driver code multi-file execution
+    let filesArray = null;
+    let mainCode = null;
+    if (Problem.driverCode && Problem.driverCode.length > 0) {
+      const driverObj = Problem.driverCode.find(
+        (d) => d.language_id === Number(language) || d.language_id == language,
+      );
+      if (driverObj) {
+        mainCode = driverObj.code;
+      }
+    }
+
+    const langForPiston = getPistonLanguage(language); // to find the lan. id
+
+    if (mainCode) {
+      filesArray = [
+        { name: getFilename(langForPiston), content: mainCode },
+        { name: getUserFilename(langForPiston), content: Code },
+      ];
+    }
+
     // eek bar ye problem db se aagai to mreko hidden test case mil jaye ge to me run kr satke hu
     // hum pehle use ke code ko db me store krte h fir pistoo ko send kre ge or fir db me update kre ge ki kya status h
     const submitResult = await submission.create({
@@ -37,7 +60,6 @@ const submitCode = async (req, res) => {
     });
 
     // pisto ko code submit krna h;
-    const langForPiston = getPistonLanguage(language); // to find the lan. id
 
     let testCasePassed = 0;
     let isError = false;
@@ -47,9 +69,10 @@ const submitCode = async (req, res) => {
       const testCase = Problem.hiddenTestCases[i];
 
       const executionResult = await executeInPiston(
-        Code,
+        Code, // Fallback if no filesArray
         langForPiston,
         testCase.input,
+        filesArray,
       );
 
       if (executionResult.error) {
@@ -128,8 +151,27 @@ const RunCode = async (req, res) => {
       return res.status(404).json({ succ: false, mess: "Problem not found" });
     }
 
+    // Prepare driver code multi-file execution
+    let filesArray = null;
+    let mainCode = null;
+    if (Problem.driverCode && Problem.driverCode.length > 0) {
+      const driverObj = Problem.driverCode.find(
+        (d) => d.language_id === Number(language) || d.language_id == language,
+      );
+      if (driverObj) {
+        mainCode = driverObj.code;
+      }
+    }
+
     // pisto ko code submit krna h;
     const langForPiston = getPistonLanguage(language); // to find the lan. id
+
+    if (mainCode) {
+      filesArray = [
+        { name: getFilename(langForPiston), content: mainCode },
+        { name: getUserFilename(langForPiston), content: Code },
+      ];
+    }
 
     let testCasePassed = 0;
     let isError = false;
@@ -140,9 +182,10 @@ const RunCode = async (req, res) => {
       const testCase = Problem.visibleTestCases[i];
 
       const executionResult = await executeInPiston(
-        Code,
+        Code, // Fallback
         langForPiston,
         testCase.input,
+        filesArray,
       );
 
       if (executionResult.error) {
