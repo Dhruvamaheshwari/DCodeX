@@ -7,7 +7,7 @@ const redisClient = require("../config/redis");
 
 const userMiddleware = async (req, res, next) => {
   try {
-    // sb se pehle token ko nikla pde ga
+    // sb se pehle token ko nikalna pde ga
     const { token } = req.cookies;
 
     if (!token) {

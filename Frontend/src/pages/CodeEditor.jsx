@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
 import { useParams, useNavigate } from 'react-router';
 import axiosClient from '../utils/axiosClient';
 import Split from 'react-split';
+import ChatAI from './ChatAI';
 
 const CodeEditor = () => {
   const { problemId } = useParams();
@@ -329,6 +330,14 @@ const CodeEditor = () => {
             >
               Submissions
             </button>
+            {/* Add  Button for Chat */}
+            <button
+              className={`px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors ${activeTab === 'chatAi' ? 'bg-base-100 text-primary' : 'text-base-content/60 hover:text-base-content hover:bg-base-300'}`}
+              onClick={() => { setActiveTab('chatAi'); setSelectedSubmission(null); }}
+            >
+              Chat With AI
+            </button>
+
           </div>
           {/* Dynamic Content */}
           <div className="flex-1 overflow-y-auto p-6">
@@ -516,6 +525,14 @@ const CodeEditor = () => {
               </div>
             )}
 
+            {/* Chat Tab */}
+            {activeTab === 'chatAi' && (
+              <div className="text-base-content/80 text-sm leading-relaxed">
+                <h2 className="text-xl font-bold mb-4 text-base-content">chat with AI</h2>
+                <ChatAI/>
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -595,8 +612,8 @@ const CodeEditor = () => {
                       <button
                         key={idx}
                         className={`btn btn-sm rounded-md transition-all duration-300 ease-in-out ${activeTestCase === idx
-                            ? 'bg-base-100 shadow-sm border-base-300 text-primary font-bold scale-105'
-                            : 'btn-ghost font-normal text-base-content/70 hover:bg-base-300'
+                          ? 'bg-base-100 shadow-sm border-base-300 text-primary font-bold scale-105'
+                          : 'btn-ghost font-normal text-base-content/70 hover:bg-base-300'
                           }`}
                         onClick={() => setActiveTestCase(idx)}
                       >

@@ -41,10 +41,23 @@ const submitCode = async (req, res) => {
 
     const langForPiston = getPistonLanguage(language); // to find the lan. id
 
+    // Extract startCode (template/header code) if it exists for the language
+    let combinedCode = Code;
+    if (Problem.startCode && Problem.startCode.length > 0) {
+      const startObj = Problem.startCode.find(
+        (s) =>
+          s.language_id === Number(language) ||
+          String(s.language_id) === String(language),
+      );
+      if (startObj && startObj.initialCode) {
+        combinedCode = startObj.initialCode + "\n" + Code;
+      }
+    }
+
     if (mainCode) {
       filesArray = [
         { name: getFilename(langForPiston), content: mainCode },
-        { name: getUserFilename(langForPiston), content: Code },
+        { name: getUserFilename(langForPiston), content: combinedCode },
       ];
     }
 
@@ -53,7 +66,7 @@ const submitCode = async (req, res) => {
     const submitResult = await submission.create({
       userId,
       problemId,
-      Code,
+      Code: combinedCode, // Save combined code to DB if needed, or keep original 'Code'
       language,
       status: "pending",
       testCasesTotal: Problem.hiddenTestCases.length,
@@ -69,7 +82,7 @@ const submitCode = async (req, res) => {
       const testCase = Problem.hiddenTestCases[i];
 
       const executionResult = await executeInPiston(
-        Code, // Fallback if no filesArray
+        combinedCode, // Fallback if no filesArray
         langForPiston,
         testCase.input,
         filesArray,
@@ -162,19 +175,31 @@ const RunCode = async (req, res) => {
         mainCode = driverObj.code;
       }
     }
-    
 
     // pisto ko code submit krna h;
     const langForPiston = getPistonLanguage(language); // to find the lan. id
 
+    // Extract startCode (template/header code) if it exists for the language
+    let combinedCode = Code;
+    if (Problem.startCode && Problem.startCode.length > 0) {
+      const startObj = Problem.startCode.find(
+        (s) =>
+          s.language_id === Number(language) ||
+          String(s.language_id) === String(language),
+      );
+      if (startObj && startObj.initialCode) {
+        combinedCode = startObj.initialCode + "\n" + Code;
+      }
+    }
+
     if (mainCode) {
       filesArray = [
         { name: getFilename(langForPiston), content: mainCode },
-        { name: getUserFilename(langForPiston), content: Code },
+        { name: getUserFilename(langForPiston), content: combinedCode },
       ];
     }
 
-    console.log(Code);
+    console.log(combinedCode);
 
     let testCasePassed = 0;
     let isError = false;
@@ -185,7 +210,7 @@ const RunCode = async (req, res) => {
       const testCase = Problem.visibleTestCases[i];
 
       const executionResult = await executeInPiston(
-        Code, // Fallback
+        combinedCode, // Fallback
         langForPiston,
         testCase.input,
         filesArray,
