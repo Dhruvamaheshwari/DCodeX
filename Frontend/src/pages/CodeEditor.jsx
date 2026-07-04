@@ -529,7 +529,7 @@ const CodeEditor = () => {
             {activeTab === 'chatAi' && (
               <div className="text-base-content/80 text-sm leading-relaxed">
                 <h2 className="text-xl font-bold mb-4 text-base-content">chat with AI</h2>
-                <ChatAI/>
+                <ChatAI problem={problem}/>
               </div>
             )}
 

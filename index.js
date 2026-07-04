@@ -8,6 +8,7 @@ const Port = process.env.PORT || 4000;
 const route = require("./Routes/userAuth.route");
 const ProblemRoute = require("./Routes/problem.route");
 const submitRoute = require("./Routes/submit.route");
+const chatRoute = require("./Routes/chat.route");
 
 // import the cookie
 const cookieParser = require("cookie-parser");
@@ -26,6 +27,7 @@ app.use(cookieParser());
 app.use("/user", route);
 app.use("/problem", ProblemRoute);
 app.use("/submission", submitRoute);
+app.use("/chat", chatRoute);
 
 const dbconnect = require("./config/db.connect");
 const redisClient = require("./config/redis");
