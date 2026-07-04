@@ -1,30 +1,48 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FiSend } from "react-icons/fi";
+import { MdDeleteOutline } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
 import axiosClient from "../utils/axiosClient";
+import {
+    addChatMessages,
+    chatDefaultMessages,
+    clearChatMessages,
+    initializeChat,
+    selectChatForProblem,
+} from "../chatSlice";
 
 const ChatAI = ({ problem }) => {
+    const dispatch = useDispatch();
     const [message, setMessage] = useState("");
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef(null);
-    const messageIdRef = useRef(3);
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            role: "assistant",
-            text: "Hi, I can help with ideas, edge cases, and debugging hints for this problem.",
-        },
-        {
-            id: 2,
-            role: "assistant",
-            text: "Send a short question and I’ll reply with a simple, useful answer.",
-        },
-    ]);
+    const problemId = problem?._id || problem?.id;
+    const problemChat = useSelector(selectChatForProblem(problemId));
+    const messages = problemChat?.messages || chatDefaultMessages;
+    const messageIdRef = useRef(problemChat?.nextMessageId || 3);
 
     const suggestions = useMemo(
         () => ["Explain the logic", "Find edge cases", "Give me a hint"],
         []
     );
+
+    useEffect(() => {
+        if (!problemId) {
+            return;
+        }
+
+        dispatch(
+            initializeChat({
+                problemId,
+                initialMessages: chatDefaultMessages,
+            })
+        );
+    }, [dispatch, problemId]);
+
+    useEffect(() => {
+        messageIdRef.current = problemChat?.nextMessageId || 3;
+    }, [problemChat?.nextMessageId]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -259,27 +277,44 @@ const ChatAI = ({ problem }) => {
                 text: assistantReply,
             };
 
-            setMessages((prev) => [...prev, userMessage, assistantMessage]);
+            dispatch(
+                addChatMessages({
+                    problemId,
+                    userMessage,
+                    assistantMessage,
+                })
+            );
         } catch (error) {
             const errorMessage = error.response?.data?.mess || "Failed to get chat response.";
 
-            setMessages((prev) => [
-                ...prev,
-                {
-                    id: nextId,
-                    role: "user",
-                    text: trimmed,
-                },
-                {
-                    id: nextId + 1,
-                    role: "assistant",
-                    text: errorMessage,
-                },
-            ]);
+            dispatch(
+                addChatMessages({
+                    problemId,
+                    userMessage: {
+                        id: nextId,
+                        role: "user",
+                        text: trimmed,
+                    },
+                    assistantMessage: {
+                        id: nextId + 1,
+                        role: "assistant",
+                        text: errorMessage,
+                    },
+                })
+            );
         } finally {
             setIsSending(false);
         }
 
+    };
+
+    const handleClearChat = () => {
+        if (!problemId) {
+            return;
+        }
+
+        dispatch(clearChatMessages({ problemId }));
+        messageIdRef.current = 3;
     };
 
     const handleSubmit = (event) => {
@@ -295,7 +330,19 @@ const ChatAI = ({ problem }) => {
                     <h3 className="text-sm font-bold text-base-content">AI Assistant</h3>
                     <p className="text-xs text-base-content/60">Quick hints for your coding problem</p>
                 </div>
-                <span className="badge badge-success badge-outline">Ready</span>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-ghost btn-xs text-error hover:bg-error/10"
+                        onClick={handleClearChat}
+                        disabled={isSending}
+                        title="Clear chat"
+                    >
+                        <MdDeleteOutline className="text-base" />
+                        Delete Chat
+                    </button>
+                    <span className="badge badge-success badge-outline">Ready</span>
+                </div>
             </div>
 
             <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto">
